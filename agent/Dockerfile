@@ -8,11 +8,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     python3-pip && \
-    pip3 install meson \
+    pip3 install meson && \
     pip3 install wandb
 
 # Download libtorch
-RUN curl -L -o libtorch.zip "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.2.2+cpu.zip" && \
+RUN curl -L -o libtorch.zip "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.2.2%2Bcpu.zip" && \
     unzip libtorch.zip -d /libtorch && \
     rm libtorch.zip
 
