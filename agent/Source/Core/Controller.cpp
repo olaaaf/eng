@@ -28,7 +28,7 @@ void Controller::write(u16 address, u8 data) {
         //TODO: Implement JOY2
     }
 }
-
+#if USE_SDL
 void Controller::setButtonPressed(SDL_Keycode key, bool pressed) {
     if (key == SDLK_a) {
         btnState = (pressed) ? (btnState | (1 << 0)) : (btnState & ~(1 << 0));
@@ -62,5 +62,5 @@ void Controller::setButtonPressed(SDL_Keycode key, bool pressed) {
         btnState = (pressed) ? (btnState | (1 << 7)) : (btnState & ~(1 << 7));
     }
 }
-
+#endif
 }  //namespace MedNES

@@ -1,6 +1,7 @@
 #pragma once
-
+#if USE_SDL
 #include <SDL.h>
+#endif
 #include <stdio.h>
 
 #include <string>
@@ -23,7 +24,9 @@ class Controller : INESBus {
     void write(u16 address, u8 data);
 
     //Input
+    #if USE_SDL
     void setButtonPressed(SDL_Keycode, bool);
+    #endif
 };
 
 };  //namespace MedNES

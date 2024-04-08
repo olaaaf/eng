@@ -21,7 +21,7 @@ void skip_menu(MedNES::PPU &ppu, MedNES::CPU6502 &cpu, MedNES::Controller &contr
     cpu.step();
     if (ppu.generateFrame)
     {
-      controller.setButtonPressed(SDLK_RETURN, pressed / 64 == 0);
+      //controller.setButtonPressed(SDLK_RETURN, pressed / 64 == 0);
       pressed++;
       ppu.generateFrame = false;
     }
@@ -34,14 +34,14 @@ void skip_menu(MedNES::PPU &ppu, MedNES::CPU6502 &cpu, MedNES::Controller &contr
   }
 }
 
-void downsampleToGrayscale(Uint32* originalBuffer, uint8_t* newBuffer) {
+void downsampleToGrayscale(uint32_t* originalBuffer, uint8_t* newBuffer) {
     for (int newY = 0; newY < kNewHeight; ++newY) {
         for (int newX = 0; newX < kNewWidth; ++newX) {
             // Accumulate values from a 2x2 block in the original image
-            Uint32 sum = 0;
+            uint32_t sum = 0;
             for (int dy = 0; dy < kBlockHeight; ++dy) {
                 for (int dx = 0; dx < kBlockWidth; ++dx) {
-                    Uint32 pixel = originalBuffer[(newY * kBlockHeight + dy) * kOriginalWidth + (newX * kBlockWidth + dx)];
+                    uint32_t pixel = originalBuffer[(newY * kBlockHeight + dy) * kOriginalWidth + (newX * kBlockWidth + dx)];
                     // Convert pixel to grayscale using a simple average or a weighted method
                     uint8_t gray = ((pixel >> 16) & 0xFF) * 0.3 + ((pixel >> 8) & 0xFF) * 0.59 + (pixel & 0xFF) * 0.11;
                     sum += gray;
@@ -57,7 +57,7 @@ void downsampleToGrayscale(Uint32* originalBuffer, uint8_t* newBuffer) {
 void handleCustomEvents(MedNES::Controller &controller, bool &is_running)
 {
 }
-
+#if USE_SDL
 void handleSDLEvents(MedNES::Controller &controller, std::map<int, int> &map, bool &is_running)
 {
   SDL_Event event;
@@ -85,3 +85,4 @@ void handleSDLEvents(MedNES::Controller &controller, std::map<int, int> &map, bo
     }
   }
 }
+#endif

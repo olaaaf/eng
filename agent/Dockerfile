@@ -8,12 +8,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     python3-pip && \
-    pip3 install meson && \
     pip3 install wandb
 
 # Download libtorch
 RUN curl -L -o libtorch.zip "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.2.2%2Bcpu.zip" && \
-    unzip libtorch.zip -d /libtorch && \
+    unzip libtorch.zip -d / && \
     rm libtorch.zip
 
 # Set the environment variables for CMake to find LibTorch
@@ -24,8 +23,7 @@ COPY . /app
 WORKDIR /app
 
 # Build your project with Meson
-RUN meson builddir && \
-    ninja -C builddir
+RUN make
 
 # Copy the mario.nes file to the build directory
 COPY mario.nes /app/
