@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdint> // For uint8_t
 #include <string>
+#include <torch/torch.h>
 
 // Struct to represent button presses.
 struct ButtonPresses {
