@@ -1,0 +1,4 @@
+{
+    "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
+    "cmake.sourceDirectory": "/workspaces/eng/agent"
+}
