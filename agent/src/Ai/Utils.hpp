@@ -14,7 +14,6 @@ constexpr int kBlockHeight = kOriginalHeight / kNewHeight;
 
 void skip_menu(MedNES::PPU &ppu, MedNES::CPU6502 &cpu, MedNES::Controller &controller)
 {
-  uint8_t pressed = 0;
   bool game_on = false;
   while (!game_on)
   {
@@ -22,7 +21,6 @@ void skip_menu(MedNES::PPU &ppu, MedNES::CPU6502 &cpu, MedNES::Controller &contr
     if (ppu.generateFrame)
     {
       //controller.setButtonPressed(SDLK_RETURN, pressed / 64 == 0);
-      pressed++;
       ppu.generateFrame = false;
     }
     if (cpu.read(0x0776) != 0)
@@ -57,32 +55,3 @@ void downsampleToGrayscale(uint32_t* originalBuffer, uint8_t* newBuffer) {
 void handleCustomEvents(MedNES::Controller &controller, bool &is_running)
 {
 }
-#if USE_SDL
-void handleSDLEvents(MedNES::Controller &controller, std::map<int, int> &map, bool &is_running)
-{
-  SDL_Event event;
-  while (SDL_PollEvent(&event))
-  {
-    switch (event.type)
-    {
-    case SDL_CONTROLLERBUTTONDOWN:
-      controller.setButtonPressed(map.find(event.cbutton.button)->second, true);
-      break;
-    case SDL_CONTROLLERBUTTONUP:
-      controller.setButtonPressed(map.find(event.cbutton.button)->second, false);
-      break;
-    case SDL_KEYDOWN:
-      controller.setButtonPressed(event.key.keysym.sym, true);
-      break;
-    case SDL_KEYUP:
-      controller.setButtonPressed(event.key.keysym.sym, false);
-      break;
-    case SDL_QUIT:
-      is_running = false;
-      break;
-    default:
-      break;
-    }
-  }
-}
-#endif

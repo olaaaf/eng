@@ -24,6 +24,10 @@ RUN apt update && apt upgrade -y && apt install -y \
     linux-headers-generic \
     && rm -rf /var/lib/apt/lists/*
 
+RUN wget https://ftp.gnu.org/gnu/gdb/gdb-10.1.tar.gz -O gdb.tar.gz \
+    && tar -xf gdb.tar.gz && cd gdb && ./configure && make && make install \
+    && cd /root/
+
 # Set environment variables for vcpkg and Clang
 ENV CXX=/usr/bin/clang++
 ENV CC=/usr/bin/clang

@@ -1,4 +1,7 @@
 {
     "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
-    "cmake.sourceDirectory": "/workspaces/eng/agent"
+    "cmake.sourceDirectory": "/workspaces/eng/agent",
+    "files.associations": {
+        "*.tcc": "cpp"
+    }
 }

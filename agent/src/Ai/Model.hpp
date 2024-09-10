@@ -21,7 +21,7 @@ struct ButtonPresses {
 class Model {
 public:
     // Constructor and Destructor
-    Model();
+    Model(int input_size);
     ~Model();
 
     // Disable copy and assignment.
@@ -34,7 +34,7 @@ public:
 
     // Function to process the input (uin8_t buffer) and predict the button presses.
     // The buffer is expected to be a processed image/frame from the emulator.
-    ButtonPresses predict(const std::vector<uint8_t>& inputBuffer);
+    ButtonPresses predict(uint8_t *input);
 
 private:
     // Private member variables for the model.

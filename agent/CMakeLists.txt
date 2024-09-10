@@ -5,7 +5,7 @@ project(MedNES VERSION 1.0 DESCRIPTION "MedNES Emulator" LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -O2 -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -g")
 add_compile_options(-Wall -Wextra -pedantic)
 
 find_package(Torch REQUIRED)
@@ -14,6 +14,7 @@ find_package(Torch REQUIRED)
 set(SOURCE_FILES
     src/Ai/Model.cpp
     src/Ai/Simulate.cpp
+    src/Ai/Score.cpp
     src/Core/6502.cpp
     src/Core/Controller.cpp
     src/Core/PPU.cpp
@@ -26,6 +27,25 @@ set(SOURCE_FILES
     src/Core/Mapper/UnROM.cpp
     # Uncomment the line below if you want to include the main.cpp file
     # Source/Desktop/Main.cpp
+)
+
+set(MEDNES_FILES
+    src/Core/6502.cpp
+    src/Core/Controller.cpp
+    src/Core/PPU.cpp
+    src/Core/RAM.cpp
+    src/Core/ROM.cpp
+    src/Core/Mapper/CNROM.cpp
+    src/Core/Mapper/MMC1.cpp
+    src/Core/Mapper/Mapper.cpp
+    src/Core/Mapper/NROM.cpp
+    src/Core/Mapper/UnROM.cpp
+)
+
+set_source_files_properties(
+    ${MEDNES_FILES}
+    PROPERTIES
+    COMPILE_FLAGS "-Wno-everything"
 )
 
 # Add executable
