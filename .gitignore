@@ -1,3 +1,4 @@
 .o
 build
 .cache
+.DS_Store
