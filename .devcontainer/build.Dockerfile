@@ -37,6 +37,11 @@ RUN wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-wit
     && unzip libtorch.zip -d /opt/ \
     && rm libtorch.zip
 
+RUN wget https://github.com/conan-io/conan/releases/download/2.6.0/conan-2.6.0-linux-x86_64.tgz &&
+    tar -xvf conan-2.6.0-linux-x86_64.tgz && cp -R bin/* /usr/bin/
+
+RUN conan install --requires=drogon/1.9.6 --build=missing
+
 # Copy the libtorch files to the appropriate system directories
 RUN cp -R /opt/libtorch/include/* /usr/include/ \
     && cp -R /opt/libtorch/share/* /usr/share/ \

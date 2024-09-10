@@ -10,8 +10,10 @@
                 "ms-vscode.cpptools-extension-pack",
                 "twxs.cmake",
                 "ms-vscode.cmake-tools",
-                "llvm-vs-code-extensions.vscode-clangd"
+                "llvm-vs-code-extensions.vscode-clangd",
+                "disroop.conan"
             ]
         }
-    }
+    },
+    "postCreateCommand": "cd /workspaces/eng/agent && conan install . --output-folder=build --build=missing"
 }
