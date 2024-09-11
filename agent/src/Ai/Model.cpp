@@ -8,15 +8,12 @@
 #include <torch/torch.h>
 
 ButtonPresses Model::interpret_output(uint8_t *input) {
-  ButtonPresses presses;
+  static ButtonPresses presses;
   presses.right = true;
   return presses;
 }
 
-ButtonPresses Model::predict(uint8_t *input) {
-  auto presses = interpret_output(input);
-  return presses;
-}
+ButtonPresses Model::predict(uint8_t *input) { return interpret_output(input); }
 
 std::optional<std::unique_ptr<Model>>
 Model::Create(const std::string &model_path) {

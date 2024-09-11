@@ -1,10 +1,13 @@
 #pragma once
 #include <cstdint>
 
+enum GameState { RUNNING, GAME_OVER };
+
 class Score {
 public:
   Score();
-  void frame(uint8_t, uint8_t, uint8_t);
+  GameState frame(uint8_t horizontal, uint8_t screen, uint8_t lives);
+  void report();
 
 private:
   int heighest;

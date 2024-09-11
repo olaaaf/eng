@@ -1,4 +1,5 @@
 // Precompiler flag to enable or disable SDL
+#include "Ai/Score.hpp"
 #include <iostream>
 #include <ostream>
 #define USE_SDL 0
@@ -16,9 +17,9 @@
 
 uint8_t model_input[kNewHeight * kNewWidth];
 constexpr std::string romPath = "mario.nes";
-constexpr int frames_to_input_generation = 10;
+constexpr int frames_to_input_generation = 20;
 
-int simulate() {
+int simulate(Score &score) {
   bool is_running = true;
 
   // create the model :)
@@ -50,15 +51,17 @@ int simulate() {
     // as downsampling and model prediction is somewhat costly
     // this happens every frames_to_input_generation
     if (frame == 0) {
-      fastDownsampleToGrayscale(ppu.buffer, model_input, 256, 240, 32, 30);
+      fastDownsampleToGrayscale(ppu.buffer, model_input);
       model_output = model->predict(model_input);
+      controller.setButtonPressed(model_output);
     }
 
-    controller.setButtonPressed(model_output);
-    if (cpu.read(0x075A) != 2) {
-      std::cout << "died";
-      return 0;
+    // position evaluation
+    if (score.frame(cpu.read(0x006d), cpu.read(0x0086), cpu.read(0x075A)) ==
+        GameState::GAME_OVER) {
+      return 1;
     }
+
     ppu.generateFrame = false;
     frame = (frame + 1) % frames_to_input_generation;
   }
@@ -66,4 +69,8 @@ int simulate() {
   return 0;
 }
 
-int main() { simulate(); }
+int main() {
+  Score score;
+  simulate(score);
+  score.report();
+}
