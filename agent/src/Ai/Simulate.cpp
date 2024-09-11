@@ -17,7 +17,7 @@
 
 uint8_t model_input[kNewHeight * kNewWidth];
 constexpr std::string romPath = "mario.nes";
-constexpr int frames_to_input_generation = 20;
+constexpr int frames_to_input_generation = 10000;
 
 int simulate(Score &score) {
   bool is_running = true;
