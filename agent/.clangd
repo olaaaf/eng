@@ -5,9 +5,6 @@ Diagnostics:
   ClangTidy:
     Add: [google-*]
     Remove: [google-runtime-references]
-    CheckOptions:
-      - { key: readability-identifier-naming.VariableCase, value: lower_case }
-      - { key: readability-identifier-naming.PrivateMemberPrefix, value: m_ }
 Index:
   Background: Build
 

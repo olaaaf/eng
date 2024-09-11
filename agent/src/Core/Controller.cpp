@@ -1,66 +1,63 @@
 #include "Controller.hpp"
+#include "../Ai/Model.hpp"
 
 namespace MedNES {
 
 u8 Controller::read(u16 address) {
-    if (address == 0x4016) {
-        if (strobe) {
-            return 0x40 | (btnState & 1);
-        }
-
-        JOY1 = 0x80 | (btnStateLocked & 1);
-        btnStateLocked >>= 1;
-        return JOY1;
-    } else {
-        //TODO: Implement JOY2
-        return JOY2;
+  if (address == 0x4016) {
+    if (strobe) {
+      return 0x40 | (btnState & 1);
     }
+
+    JOY1 = 0x80 | (btnStateLocked & 1);
+    btnStateLocked >>= 1;
+    return JOY1;
+  } else {
+    // TODO: Implement JOY2
+    return JOY2;
+  }
 }
 
 void Controller::write(u16 address, u8 data) {
-    if (address == 0x4016) {
-        if (strobe && !(data & 0x1)) {
-            btnStateLocked = btnState;
-        }
-
-        strobe = data & 0x1;
-    } else {
-        //TODO: Implement JOY2
+  if (address == 0x4016) {
+    if (strobe && !(data & 0x1)) {
+      btnStateLocked = btnState;
     }
+
+    strobe = data & 0x1;
+  } else {
+    // TODO: Implement JOY2
+  }
 }
-#if USE_SDL
-void Controller::setButtonPressed(SDL_Keycode key, bool pressed) {
-    if (key == SDLK_a) {
-        btnState = (pressed) ? (btnState | (1 << 0)) : (btnState & ~(1 << 0));
-    }
 
-    if (key == SDLK_b) {
-        btnState = (pressed) ? (btnState | (1 << 1)) : (btnState & ~(1 << 1));
-    }
+void Controller::setButtonPressed(ButtonPresses keys) {
+  btnState = 0;
 
-    if (key == SDLK_SPACE) {
-        btnState = (pressed) ? (btnState | (1 << 2)) : (btnState & ~(1 << 2));
-    }
+  if (keys.enter) {
+    btnState = btnState | (1 << 3);
+  }
+  if (keys.a) {
+    btnState = btnState | (1 << 0);
+  }
 
-    if (key == SDLK_RETURN) {
-        btnState = (pressed) ? (btnState | (1 << 3)) : (btnState & ~(1 << 3));
-    }
+  if (keys.b) {
+    btnState = btnState | (1 << 1);
+  }
 
-    if (key == SDLK_UP) {
-        btnState = (pressed) ? (btnState | (1 << 4)) : (btnState & ~(1 << 4));
-    }
+  if (keys.up) {
+    btnState = btnState | (1 << 4);
+  }
 
-    if (key == SDLK_DOWN) {
-        btnState = (pressed) ? (btnState | (1 << 5)) : (btnState & ~(1 << 5));
-    }
+  if (keys.down) {
+    btnState = btnState | (1 << 5);
+  }
 
-    if (key == SDLK_LEFT) {
-        btnState = (pressed) ? (btnState | (1 << 6)) : (btnState & ~(1 << 6));
-    }
+  if (keys.left) {
+    btnState = btnState | (1 << 6);
+  }
 
-    if (key == SDLK_RIGHT) {
-        btnState = (pressed) ? (btnState | (1 << 7)) : (btnState & ~(1 << 7));
-    }
+  if (keys.right) {
+    btnState = btnState | (1 << 7);
+  }
 }
-#endif
-}  //namespace MedNES
+} // namespace MedNES
