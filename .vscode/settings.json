@@ -1,9 +1,9 @@
 {
-    "cmake.sourceDirectory": "/workspaces/eng/agent",
-    "cmake.configureArgs": [
-        "-DCMAKE_TOOLCHAIN_FILE=/workspaces/eng/agent/build/build/Release/generators/conan_toolchain.cmake"
-    ],
-    "files.associations": {
-        "*.tcc": "cpp"
-    }
+  "cmake.sourceDirectory": "/workspaces/eng/agent",
+  "cmake.configureArgs": [
+    "-DCMAKE_TOOLCHAIN_FILE=/workspaces/eng/agent/build/build/Release/generators/conan_toolchain.cmake"
+  ],
+  "files.associations": {
+    "*.tcc": "cpp"
+  }
 }
