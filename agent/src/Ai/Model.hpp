@@ -1,47 +1,41 @@
 #pragma once
 
-#include <vector>
 #include <cstdint> // For uint8_t
+#include <memory>
+#include <optional>
 #include <string>
 #include <torch/torch.h>
 
 // Struct to represent button presses.
 struct ButtonPresses {
-    bool left;
-    bool right;
-    bool up;
-    bool down;
-    bool a;
-    bool b;
+  bool left;
+  bool right;
+  bool up;
+  bool down;
+  bool a;
+  bool b;
+  bool enter;
+  bool space;
 
-    // Initialize all buttons to false (not pressed)
-    ButtonPresses() : left(false), right(false), up(false), down(false), a(false), b(false) {}
+  // Initialize all buttons to false (not pressed)
+  ButtonPresses()
+      : left(false), right(false), up(false), down(false), a(false), b(false),
+        enter(false), space(false) {}
 };
 
 class Model {
 public:
-    // Constructor and Destructor
-    Model(int input_size);
-    ~Model();
+  Model() = default;
+  ~Model() = default;
+  Model(const Model &) = delete;
+  Model &operator=(const Model &) = delete;
 
-    // Disable copy and assignment.
-    Model(const Model&) = delete;
-    Model& operator=(const Model&) = delete;
-
-    // Function to load the model from a model registry.
-    // The details of this function will depend on how your model registry is structured.
-    bool loadModel(const std::string& modelPath);
-
-    // Function to process the input (uin8_t buffer) and predict the button presses.
-    // The buffer is expected to be a processed image/frame from the emulator.
-    ButtonPresses predict(uint8_t *input);
+  static std::optional<std::unique_ptr<Model>>
+  Create(const std::string &model_path);
+  ButtonPresses predict(uint8_t *input);
 
 private:
-    // Private member variables for the model.
-    // Depending on the ML framework, you might have a model object here.
-    // For example, for TensorFlow:
-    // std::unique_ptr<tensorflow::SavedModelBundle> model;
+  std::unique_ptr<torch::jit::script::Module> module;
 
-    // Helper functions for processing the model's output.
-    ButtonPresses interpretOutput(/* Output data structure from your ML model */);
+  ButtonPresses interpret_output(uint8_t *input);
 };

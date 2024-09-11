@@ -27,6 +27,7 @@ set(SOURCE_FILES
     src/Core/Mapper/Mapper.cpp
     src/Core/Mapper/NROM.cpp
     src/Core/Mapper/UnROM.cpp
+    src/Web/Fetch.cpp
     # Uncomment the line below if you want to include the main.cpp file
     # Source/Desktop/Main.cpp
 )
