@@ -12,7 +12,7 @@ class Trainer:
     def store_step(self, state, action):
         self.episode_data.append((state, action))
 
-    async def train(self, model_id, rewards):
+    async def train(self, model_id, final_score):
         self.logger.info(f"Training model {model_id}")
         
         # Prepare data for training

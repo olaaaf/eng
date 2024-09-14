@@ -24,6 +24,17 @@ class LogData(BaseModel):
     level: str
     message: str
 
+class Step(BaseModel):
+    mario_x: int
+    mario_y: int
+    frame:   int
+    action: List[int]
+
+class Episode(BaseModel):
+    model_id: int
+    final_score: int
+    steps: List[Step]
+
 def get_db():
     db = DBHandler()
     try:
@@ -53,15 +64,19 @@ async def get_action(data: InputData, db: DBHandler = Depends(get_db), logger = 
    
     return {"model_base64": model_base64}
 
-@router.post("/submit_score")
-async def submit_score(data: ScoreData, background_tasks: BackgroundTasks, db: DBHandler = Depends(get_db), logger = Depends(get_logger)):
+@router.post("/submit_episode")
+async def submit_score(data: Episode, background_tasks: BackgroundTasks, db: DBHandler = Depends(get_db), logger = Depends(get_logger)):
+    
     model, optimizer = db.load_model(data.model_id)
     if model is None:
         logger.error(f"Model {data.model_id} not found for score submission.")
         return {"status": "Error: Model not found"}
 
     trainer = Trainer(model, optimizer, db, logger)
-    rewards = [data.position * 10] * len(trainer.episode_data)
+    for step in data.steps:
+        state = torch.tensor([step.mario_x, step.mario_y, step.frame], dtype=torch.float32)
+        action = torch.sensor(step.action, dtype=torch.float32)
+        trainer.store_step(state, action)
     
     background_tasks.add_task(trainer.train, data.model_id, rewards)
     
