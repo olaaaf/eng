@@ -1,6 +1,6 @@
 # Training a model to play Mario
 
-Using [wpmed92/MedNES](https://github.com/wpmed92/MedNES) emulator to Super Mario Bros.
+Using [wpmed92/MedNES](https://github.com/wpmed92/MedNES) emulator to play Super Mario Bros.
 
 ## Components
 
