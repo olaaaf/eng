@@ -12,7 +12,7 @@ provide model evaluation.
 
 | variable name                | memory address |
 |------------------------------|----------------|
-| horizontal position in level[$^1$](#1) | 0x006D         |
+| horizontal position in level [[^1]](#1) | 0x006D         |
 | position on screen           | 0x0086         |
 | horizontal speed             | 0x0057         |
 | lives: 255 means game over   | 0x075A         |  
