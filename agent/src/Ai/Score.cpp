@@ -1,5 +1,6 @@
 #include "Score.hpp"
 #include <cstdint>
+#include <iostream>
 
 Score::Score() : heighest(0) {}
 
