@@ -12,9 +12,10 @@ provide model evaluation.
 
 | variable name                | memory address |
 |------------------------------|----------------|
-| horizontal position in level [[^1]](#1) | 0x006D         |
-| position on screen           | 0x0086         |
+| horizontal position in level [[^1]](#1) | 0x006D      |
+| x position on screen         | 0x0086         |
 | horizontal speed             | 0x0057         |
 | lives: 255 means game over   | 0x075A         |  
+| y postion on screen          | 0x00CE         |
 
 <a id="1">[1]</a> The absolute position in the level is calculated as: `(horizontal_position << 8) | screen_position`
