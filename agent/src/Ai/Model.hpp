@@ -38,8 +38,6 @@ public:
 
   static std::optional<std::unique_ptr<Model>>
   FromFile(const std::string &model_path);
-  static std::optional<std::unique_ptr<Model>>
-  FromStream(const std::vector<char> &stream);
   ButtonPresses predict(uint8_t *input);
 
 private:

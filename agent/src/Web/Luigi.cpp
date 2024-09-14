@@ -33,15 +33,12 @@ void LuigiClient::fetchModel(
     }
 
     std::string model_base64 = (*json)["model_base64"].asString();
-    
-    std::string model_data = drogon::utils::base64Decode(model_base64);
+
+    std::vector<char> model_data =
+        drogon::utils::base64DecodeToVector(model_base64);
 
     try {
-    std::unique_ptr<torch::jit::script::Module> module =
-        std::make_unique<torch::jit::script::Module>(
-            torch::jit::pickle_load(stream));
-    // create a defaut model
-    std::unique_ptr<Model> model = std::make_unique<Model>();
+      auto module = torch::jit::pickle_load(model_data);
     } catch (const c10::Error &e) {
       std::cerr << "Error loading the model: " << e.what() << std::endl;
       callback(nullptr);
@@ -51,7 +48,7 @@ void LuigiClient::fetchModel(
 
 void LuigiClient::submitScore(std::shared_ptr<Score> score, int model_id,
                               std::function<void(bool)> callback) {
-  auto episode = Episode::fromScore(score, model_id);
+  auto episode = Episode::fromScore(score, model_id, 0, 0);
   submitEpisode(std::move(episode), std::move(callback));
 }
 

@@ -1,6 +1,5 @@
 #include "Score.hpp"
 #include "Ai/Model.hpp"
-#include "Core/6502.hpp"
 #include <cstdint>
 
 Score::Score() : heighest(0) {}
