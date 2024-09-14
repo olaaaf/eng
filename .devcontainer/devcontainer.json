@@ -1,4 +1,4 @@
-{
+
     "name": "dev",
     "build": {
         "dockerfile": "build.Dockerfile"

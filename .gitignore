@@ -2,3 +2,41 @@
 build
 .cache
 .DS_Store
+
+# LaTeX intermediate files
+*.aux
+*.bbl
+*.blg
+*.brf
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.dvi
+
+# Generated PDFs
+*.pdf
+!doc/assets/*.pdf
+
+# Temporary files
+*.tmp
+*.bak
+*.sav
+
+# SyncTeX files (useful for forward/inverse search between editor and PDF viewer)
+*.synctex.gz
+
+# LaTeX compile-specific output
+*.fdb_latexmk
+*.fls
+
+# Specific Editors or Tools (optional)
+# Ignore files created by certain LaTeX editors or tools, if applicable:
+
+# For TeXShop (macOS)
+*.texshop
+*.synctex(busy)
+*.synctex.gz(busy)
+
