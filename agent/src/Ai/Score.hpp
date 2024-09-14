@@ -1,5 +1,6 @@
 #pragma once
 #include "../Core/6502.hpp"
+#include "Ai/Model.hpp"
 #include <cstdint>
 #include <vector>
 
@@ -9,16 +10,14 @@ struct States {
   std::vector<int> x;
   std::vector<uint8_t> y;
   std::vector<uint8_t> x_speed;
+  std::vector<int> actions;
 };
 
-class Score {
-public:
+struct Score {
   Score();
-  void frame(MedNES::CPU6502 *cpu);
+  void frame(MedNES::CPU6502 *cpu, const ButtonPresses *model_output);
   void report(int died);
   GameState check_death(MedNES::CPU6502 *cpu);
-
-private:
   States states;
   int heighest;
 };

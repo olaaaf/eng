@@ -1,0 +1,80 @@
+[
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -o CMakeFiles/agent.dir/src/Ai/Model.cpp.o -c /workspaces/eng/agent/src/Ai/Model.cpp",
+  "file": "/workspaces/eng/agent/src/Ai/Model.cpp",
+  "output": "CMakeFiles/agent.dir/src/Ai/Model.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -o CMakeFiles/agent.dir/src/Ai/Simulate.cpp.o -c /workspaces/eng/agent/src/Ai/Simulate.cpp",
+  "file": "/workspaces/eng/agent/src/Ai/Simulate.cpp",
+  "output": "CMakeFiles/agent.dir/src/Ai/Simulate.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -o CMakeFiles/agent.dir/src/Ai/Score.cpp.o -c /workspaces/eng/agent/src/Ai/Score.cpp",
+  "file": "/workspaces/eng/agent/src/Ai/Score.cpp",
+  "output": "CMakeFiles/agent.dir/src/Ai/Score.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/6502.cpp.o -c /workspaces/eng/agent/src/Core/6502.cpp",
+  "file": "/workspaces/eng/agent/src/Core/6502.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/6502.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/Controller.cpp.o -c /workspaces/eng/agent/src/Core/Controller.cpp",
+  "file": "/workspaces/eng/agent/src/Core/Controller.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/Controller.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/PPU.cpp.o -c /workspaces/eng/agent/src/Core/PPU.cpp",
+  "file": "/workspaces/eng/agent/src/Core/PPU.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/PPU.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/RAM.cpp.o -c /workspaces/eng/agent/src/Core/RAM.cpp",
+  "file": "/workspaces/eng/agent/src/Core/RAM.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/RAM.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/ROM.cpp.o -c /workspaces/eng/agent/src/Core/ROM.cpp",
+  "file": "/workspaces/eng/agent/src/Core/ROM.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/ROM.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/Mapper/CNROM.cpp.o -c /workspaces/eng/agent/src/Core/Mapper/CNROM.cpp",
+  "file": "/workspaces/eng/agent/src/Core/Mapper/CNROM.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/Mapper/CNROM.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/Mapper/MMC1.cpp.o -c /workspaces/eng/agent/src/Core/Mapper/MMC1.cpp",
+  "file": "/workspaces/eng/agent/src/Core/Mapper/MMC1.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/Mapper/MMC1.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/Mapper/Mapper.cpp.o -c /workspaces/eng/agent/src/Core/Mapper/Mapper.cpp",
+  "file": "/workspaces/eng/agent/src/Core/Mapper/Mapper.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/Mapper/Mapper.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/Mapper/NROM.cpp.o -c /workspaces/eng/agent/src/Core/Mapper/NROM.cpp",
+  "file": "/workspaces/eng/agent/src/Core/Mapper/NROM.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/Mapper/NROM.cpp.o"
+},
+{
+  "directory": "/workspaces/eng/build",
+  "command": "/usr/bin/clang++ -DUSE_C10D_GLOO -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -I/workspaces/eng/agent/src -isystem /usr/include/torch/csrc/api/include -m64 -stdlib=libstdc++ -Wall -Wextra -pedantic -g -g -std=c++20 -Wall -Wextra -pedantic -D_GLIBCXX_USE_CXX11_ABI=1 -Wno-everything -o CMakeFiles/agent.dir/src/Core/Mapper/UnROM.cpp.o -c /workspaces/eng/agent/src/Core/Mapper/UnROM.cpp",
+  "file": "/workspaces/eng/agent/src/Core/Mapper/UnROM.cpp",
+  "output": "CMakeFiles/agent.dir/src/Core/Mapper/UnROM.cpp.o"
+}
+]

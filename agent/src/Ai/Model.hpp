@@ -21,6 +21,12 @@ struct ButtonPresses {
   ButtonPresses()
       : left(false), right(false), up(false), down(false), a(false), b(false),
         enter(false), space(false) {}
+
+  int to_int() const {
+    return (left & 0b1000000) | (right & 0b01000000) | (up & 0b00100000) |
+           (down & 0b00010000) | (a & 0b00001000) | (b & 0b00000100) |
+           (enter & 0b00000010) | (space & 0x01);
+  }
 };
 
 class Model {
@@ -31,7 +37,9 @@ public:
   Model &operator=(const Model &) = delete;
 
   static std::optional<std::unique_ptr<Model>>
-  Create(const std::string &model_path);
+  FromFile(const std::string &model_path);
+  static std::optional<std::unique_ptr<Model>>
+  FromStream(const std::vector<char> &stream);
   ButtonPresses predict(uint8_t *input);
 
 private:

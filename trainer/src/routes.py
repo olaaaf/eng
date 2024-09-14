@@ -24,16 +24,16 @@ class LogData(BaseModel):
     level: str
     message: str
 
-class Step(BaseModel):
-    mario_x: int
-    mario_y: int
-    frame:   int
-    action: List[int]
+class Steps(BaseModel):
+    mario_x: [int]
+    mario_y: [int]
+    mario_x_speed: [int]
+    action:  [int]
 
 class Episode(BaseModel):
     model_id: int
     final_score: int
-    steps: List[Step]
+    steps: Steps
 
 def get_db():
     db = DBHandler()

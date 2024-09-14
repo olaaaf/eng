@@ -10,8 +10,8 @@ namespace MedNES {
 
 class RAM : public INESBus {
 public:
-  u8 read(u16 address) const override;
-  void write(u16 address, u8 data) override;
+  u8 read(u16 address);
+  void write(u16 address, u8 data);
 
   // 256 byte pages, 8 pages on internal NES RAM
 private:

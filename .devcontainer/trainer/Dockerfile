@@ -26,8 +26,6 @@ ENV PATH="${PATH}:/root/.local/bin"
 #COPY ./trainer/pyproject.toml /workspace/
 
 # Project initialization:
-RUN poetry config virtualenvs.create false 
-#    && poetry install --no-interaction --no-ansi
 
 # Set up the entry point
 #CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

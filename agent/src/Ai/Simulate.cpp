@@ -23,7 +23,7 @@ int simulate(Score &score) {
   bool is_running = true;
 
   // create the model :)
-  auto model_result = Model::Create("hey");
+  auto model_result = Model::FromFile("hey");
   std::unique_ptr<Model> model;
   if (model_result) {
     model = std::move(model_result.value());
@@ -54,7 +54,7 @@ int simulate(Score &score) {
       fastDownsampleToGrayscale(ppu.buffer, model_input);
       model_output = model->predict(model_input);
       controller.setButtonPressed(model_output);
-      score.frame(&cpu);
+      score.frame(&cpu, &model_output);
     }
 
     // position evaluation

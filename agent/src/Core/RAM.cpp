@@ -2,7 +2,7 @@
 
 namespace MedNES {
 
-u8 RAM::read(u16 address) const {
+u8 RAM::read(u16 address) {
   address %= 2048;
   return ram[address];
 }
