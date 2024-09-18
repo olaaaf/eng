@@ -1,14 +1,19 @@
 #include "Luigi.hpp"
 #include <drogon/drogon.h>
+#include <istream>
 #include <json/json.h>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <torch/csrc/jit/api/module.h>
+#include <torch/csrc/jit/frontend/tree_views.h>
+#include <torch/csrc/jit/serialization/import.h>
 #include <torch/script.h>
 #include <vector>
 
 LuigiClient::LuigiClient(const std::string &url) : base_url(url) {}
 
-void LuigiClient::fetchModel(
+torch::jit::Module LuigiClient::fetchModel(
     int model_id,
     std::function<void(std::shared_ptr<torch::jit::Module>)> callback) {
   auto client = drogon::HttpClient::newHttpClient(base_url);
@@ -34,11 +39,13 @@ void LuigiClient::fetchModel(
 
     std::string model_base64 = (*json)["model_base64"].asString();
 
-    std::vector<char> model_data =
-        drogon::utils::base64DecodeToVector(model_base64);
+    std::string model_data = drogon::utils::base64Decode(model_base64);
+    std::istringstream model_stream(model_data);
 
     try {
-      auto module = torch::jit::pickle_load(model_data);
+      auto module_ = std::make_unique<torch::jit::Module>(
+          torch::jit::load(model_stream, std::nullopt));
+      return module_;
     } catch (const c10::Error &e) {
       std::cerr << "Error loading the model: " << e.what() << std::endl;
       callback(nullptr);

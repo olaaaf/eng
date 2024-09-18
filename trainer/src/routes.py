@@ -12,10 +12,10 @@ import io
 router = APIRouter()
 
 class InputData(BaseModel):
-    model_id: int
+    modelid: int
 
 class ScoreData(BaseModel):
-    model_id: int
+    modelid: int
     frames: int
     position: int 
     dead: bool
@@ -31,7 +31,7 @@ class Steps(BaseModel):
     action:  [int]
 
 class Episode(BaseModel):
-    model_id: int
+    modelid: int
     final_score: int
     steps: Steps
 
@@ -47,12 +47,12 @@ def get_logger(db: DBHandler = Depends(get_db)):
 
 @router.post("/get_model")
 async def get_action(data: InputData, db: DBHandler = Depends(get_db), logger = Depends(get_logger)):
-    model, optimizer = db.load_model(data.model_id)
+    model, optimizer = db.load_model(data.modelid)
     if model is None:
-        logger.warning(f"Model {data.model_id} not found. Initializing new model.")
+        logger.warning(f"Model {data.modelid} not found. Initializing new model.")
         model = SimpleModel()
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-        db.save_model(data.model_id, model, optimizer)
+        db.save_model(data.modelid, model, optimizer)
 
     # Serialize the model state_dict to a byte stream
     model_buffer = io.BytesIO()
@@ -67,9 +67,9 @@ async def get_action(data: InputData, db: DBHandler = Depends(get_db), logger = 
 @router.post("/submit_episode")
 async def submit_score(data: Episode, background_tasks: BackgroundTasks, db: DBHandler = Depends(get_db), logger = Depends(get_logger)):
     
-    model, optimizer = db.load_model(data.model_id)
+    model, optimizer = db.load_model(data.modelid)
     if model is None:
-        logger.error(f"Model {data.model_id} not found for score submission.")
+        logger.error(f"Model {data.modelid} not found for score submission.")
         return {"status": "Error: Model not found"}
 
     trainer = Trainer(model, optimizer, db, logger)
@@ -78,9 +78,9 @@ async def submit_score(data: Episode, background_tasks: BackgroundTasks, db: DBH
         action = torch.sensor(step.action, dtype=torch.float32)
         trainer.store_step(state, action)
     
-    background_tasks.add_task(trainer.train, data.model_id, rewards)
+    background_tasks.add_task(trainer.train, data.modelid, rewards)
     
-    logger.info(f"Score submitted for model {data.model_id}. Training queued.")
+    logger.info(f"Score submitted for model {data.modelid}. Training queued.")
     return {"status": "Score submitted and training queued"}
 
 @router.post("/log")
