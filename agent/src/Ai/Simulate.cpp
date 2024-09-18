@@ -23,7 +23,7 @@ int simulate(Score &score) {
   bool is_running = true;
 
   // create the model :)
-  auto model_result = Model::Create("hey");
+  auto model_result = Model::FromFile("hey");
   std::unique_ptr<Model> model;
   if (model_result) {
     model = std::move(model_result.value());
@@ -54,11 +54,11 @@ int simulate(Score &score) {
       fastDownsampleToGrayscale(ppu.buffer, model_input);
       model_output = model->predict(model_input);
       controller.setButtonPressed(model_output);
+      score.frame(&cpu, &model_output);
     }
 
     // position evaluation
-    if (score.frame(cpu.read(0x006d), cpu.read(0x0086), cpu.read(0x075A)) ==
-        GameState::GAME_OVER) {
+    if (score.check_death(&cpu) == GameState::GAME_OVER) {
       return 1;
     }
 
@@ -71,6 +71,6 @@ int simulate(Score &score) {
 
 int main() {
   Score score;
-  simulate(score);
-  score.report();
+  int ret = simulate(score);
+  score.report(ret);
 }

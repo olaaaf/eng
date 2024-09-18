@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <torch/csrc/jit/serialization/import.h>
+#include <torch/csrc/jit/serialization/pickle.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -16,7 +17,7 @@ ButtonPresses Model::interpret_output(uint8_t *input) {
 ButtonPresses Model::predict(uint8_t *input) { return interpret_output(input); }
 
 std::optional<std::unique_ptr<Model>>
-Model::Create(const std::string &model_path) {
+Model::FromFile(const std::string &model_path) {
   try {
     // load the module from path
     std::unique_ptr<torch::jit::script::Module> module =
