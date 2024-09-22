@@ -25,9 +25,8 @@ Json::Value Episode::toJson() const {
   return json;
 }
 
-std::unique_ptr<Episode> Episode::fromScore(std::shared_ptr<Score> score,
-                                            int model_id, bool died,
-                                            int final_score) {
+std::unique_ptr<Episode> Episode::fromScore(const Score *score, int model_id,
+                                            bool died, int final_score) {
   std::unique_ptr<Episode> episode = std::make_unique<Episode>();
   episode->score = score;
   episode->died = died;

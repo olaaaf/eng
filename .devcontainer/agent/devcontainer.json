@@ -15,5 +15,8 @@
       ]
     }
   },
+  "forwardPorts": [8000],
+
+  "runArgs": ["--network=shared", "--hostname=agent"],
   "postCreateCommand": "cd /workspaces/eng/agent && conan install . --output-folder=build --build=missing"
 }

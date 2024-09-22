@@ -1,10 +1,24 @@
 #include "Score.hpp"
+#include "../Web/Episode.hpp"
+#include "../Web/Luigi.hpp"
 #include "Ai/Model.hpp"
 #include <cstdint>
+#include <iostream>
+#include <string>
 
 Score::Score() : heighest(0) {}
 
-void Score::report(int died) {}
+void Score::report(int died) {
+  auto episode = Episode::fromScore(this, 0, died == 1, heighest);
+  const std::string url = "localhost:8000";
+  LuigiClient::submitScore(url, this, 0, [](bool success) {
+    if (success) {
+      std::cout << "successfull submission\n";
+    } else {
+      std::cout << "successfull submission\n";
+    }
+  });
+}
 
 void Score::frame(MedNES::CPU6502 *cpu, const ButtonPresses *model_output) {
   int x = (static_cast<int>(cpu->read(0x006D)) << 8) | cpu->read(0x0086);

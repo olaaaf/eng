@@ -8,16 +8,18 @@
 
 class LuigiClient {
 public:
-  LuigiClient(const std::string &base_url);
-  void
-  fetchModel(int model_id,
-             std::function<void(std::shared_ptr<torch::jit::Module>)> callback);
-  void submitScore(std::shared_ptr<Score> score, int model_id,
-                   std::function<void(bool)> callback);
+  LuigiClient() = delete;
+  ~LuigiClient() = delete;
+  static std::unique_ptr<torch::jit::Module>
+  fetchModel(const std::string &base_url, int model_id,
+             std::function<void()> callback);
+  static void submitScore(const std::string &base_url, const Score *score,
+                          int model_id, std::function<void(bool)> callback);
 
 private:
   const std::string base_url;
 
-  void submitEpisode(std::unique_ptr<Episode> episode,
-                     std::function<void(bool)> callback);
+  static void submitEpisode(const std::string &base_url,
+                            std::unique_ptr<Episode> episode,
+                            std::function<void(bool)> callback);
 };

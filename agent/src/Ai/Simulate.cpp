@@ -1,5 +1,8 @@
 // Precompiler flag to enable or disable SDL
 #include "Ai/Score.hpp"
+#include "Web/Luigi.hpp"
+#include <drogon/HttpAppFramework.h>
+#include <functional>
 #include <iostream>
 #include <ostream>
 #define USE_SDL 0
@@ -23,7 +26,7 @@ int simulate(Score &score) {
   bool is_running = true;
 
   // create the model :)
-  auto model_result = Model::FromFile("hey");
+  auto model_result = Model::FromFile("model");
   std::unique_ptr<Model> model;
   if (model_result) {
     model = std::move(model_result.value());
@@ -71,6 +74,10 @@ int simulate(Score &score) {
 
 int main() {
   Score score;
-  int ret = simulate(score);
-  score.report(ret);
+  auto call = std::bind(simulate, score);
+  LuigiClient::fetchModel("http://172.18.0.2:8000", 0, [&score]() {
+    int ret = simulate(score);
+    score.report(ret);
+  });
+  drogon::app().run();
 }

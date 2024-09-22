@@ -1,6 +1,13 @@
 #include "Luigi.hpp"
+#include <cstddef>
+#include <drogon/HttpClient.h>
+#include <drogon/HttpRequest.h>
 #include <drogon/drogon.h>
+#include <drogon/utils/Utilities.h>
+#include <exception>
+#include <fstream>
 #include <istream>
+#include <iterator>
 #include <json/json.h>
 #include <memory>
 #include <sstream>
@@ -11,13 +18,12 @@
 #include <torch/script.h>
 #include <vector>
 
-LuigiClient::LuigiClient(const std::string &url) : base_url(url) {}
-
-torch::jit::Module LuigiClient::fetchModel(
-    int model_id,
-    std::function<void(std::shared_ptr<torch::jit::Module>)> callback) {
+std::unique_ptr<torch::jit::Module>
+LuigiClient::fetchModel(const std::string &base_url, int model_id,
+                        const std::function<void()> callback) {
   auto client = drogon::HttpClient::newHttpClient(base_url);
   auto req = drogon::HttpRequest::newHttpJsonRequest(Json::Value());
+
   req->setPath("/get_model");
   req->setMethod(drogon::HttpMethod::Post);
   req->setParameter("model_id", std::to_string(model_id));
@@ -25,41 +31,41 @@ torch::jit::Module LuigiClient::fetchModel(
   client->sendRequest(req, [callback](drogon::ReqResult result,
                                       const drogon::HttpResponsePtr &response) {
     if (result != drogon::ReqResult::Ok) {
-      std::cerr << "Error fetching model" << std::endl;
-      callback(nullptr);
+      std::cerr << "error while sending request to server! result: " << result
+                << std::endl;
       return;
     }
 
     auto json = response->getJsonObject();
     if (!json || !(*json)["model_base64"].isString()) {
-      std::cerr << "Invalid response format" << std::endl;
-      callback(nullptr);
+      std::cerr << "error with the json" << std::endl;
       return;
     }
 
-    std::string model_base64 = (*json)["model_base64"].asString();
-
-    std::string model_data = drogon::utils::base64Decode(model_base64);
-    std::istringstream model_stream(model_data);
-
+    auto decoded =
+        drogon::utils::base64DecodeToVector((*json)["model_base64"].asString());
     try {
-      auto module_ = std::make_unique<torch::jit::Module>(
-          torch::jit::load(model_stream, std::nullopt));
-      return module_;
-    } catch (const c10::Error &e) {
-      std::cerr << "Error loading the model: " << e.what() << std::endl;
-      callback(nullptr);
+      std::ofstream file("model", std::ios::trunc | std::ios::binary);
+      std::ostream_iterator<char> output_iterator(file);
+      std::copy(decoded.begin(), decoded.end(), output_iterator);
+    } catch (std::exception e) {
+      std::cerr << e.what() << std::endl;
     }
+    callback();
   });
+
+  return nullptr;
 }
 
-void LuigiClient::submitScore(std::shared_ptr<Score> score, int model_id,
+void LuigiClient::submitScore(const std::string &base_url, const Score *score,
+                              int model_id,
                               std::function<void(bool)> callback) {
   auto episode = Episode::fromScore(score, model_id, 0, 0);
-  submitEpisode(std::move(episode), std::move(callback));
+  submitEpisode(base_url, std::move(episode), std::move(callback));
 }
 
-void LuigiClient::submitEpisode(std::unique_ptr<Episode> episode,
+void LuigiClient::submitEpisode(const std::string &base_url,
+                                std::unique_ptr<Episode> episode,
                                 std::function<void(bool)> callback) {
   auto client = drogon::HttpClient::newHttpClient(base_url);
   auto req = drogon::HttpRequest::newHttpJsonRequest(episode->toJson());

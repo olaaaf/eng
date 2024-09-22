@@ -14,6 +14,7 @@ uvicorn = "^0.30.6"
 SQLAlchemy = "^2.0.34"
 black = "^24.8.0"
 numpy = "^2.1.1"
+onnx = "^1.16.2"
 
 
 [build-system]
