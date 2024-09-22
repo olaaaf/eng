@@ -1,11 +1,15 @@
 {
   "cmake.sourceDirectory": "/workspaces/eng/agent",
   "cmake.configureArgs": [
-    "-DCMAKE_TOOLCHAIN_FILE=/workspaces/eng/agent/build/build/Release/generators/conan_toolchain.cmake"
+    "-DCMAKE_TOOLCHAIN_FILE=/workspaces/eng/agent/build/build/Release/generators/conan_toolchain.cmake",
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
   ],
   "files.associations": {
     "*.tcc": "cpp"
   },
   "cmake.ignoreCMakeListsMissing": true,
-  "python.analysis.autoImportCompletions": true
+  "python.analysis.autoImportCompletions": true,
+  "clangd.arguments": [
+    "--compile-commands-dir=agent/build/build/Release"
+  ],
 }
