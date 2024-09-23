@@ -58,7 +58,12 @@ async def get_action(model_id, db: DBHandler = Depends(get_db), logger = Depends
     # Serialize the model state_dict to a byte stream
     model_buffer = io.BytesIO()
     
-    torch.save(model.state_dict(), model_buffer)
+    model.eval()
+
+    faux_input = torch.randn(60*64)
+    traced_model = torch.jit.trace(model, faux_input)
+
+    torch.jit.save(traced_model, model_buffer)
     model_buffer.seek(0)
     
     # Encode the model bytes to base64 so it can be sent in the JSON response

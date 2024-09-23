@@ -35,13 +35,16 @@ public:
   ~Model() = default;
   Model(const Model &) = delete;
   Model &operator=(const Model &) = delete;
+  std::unique_ptr<torch::jit::script::Module> module = nullptr;
 
   static std::optional<std::unique_ptr<Model>>
   FromFile(const std::string &model_path);
+
   ButtonPresses predict(uint8_t *input);
 
-private:
-  std::unique_ptr<torch::jit::script::Module> module;
+  static std::optional<std::unique_ptr<Model>>
+  FromWeights(const std::vector<char> &weight_data);
 
+private:
   ButtonPresses interpret_output(uint8_t *input);
 };

@@ -1,4 +1,6 @@
 #include "Luigi.hpp"
+#include <caffe2/serialize/inline_container.h>
+#include <caffe2/serialize/read_adapter_interface.h>
 #include <cstddef>
 #include <drogon/HttpClient.h>
 #include <drogon/HttpRequest.h>
@@ -15,6 +17,7 @@
 #include <torch/csrc/jit/api/module.h>
 #include <torch/csrc/jit/frontend/tree_views.h>
 #include <torch/csrc/jit/serialization/import.h>
+#include <torch/csrc/jit/serialization/pickle.h>
 #include <torch/script.h>
 #include <vector>
 
@@ -44,13 +47,12 @@ LuigiClient::fetchModel(const std::string &base_url, int model_id,
 
     auto decoded =
         drogon::utils::base64DecodeToVector((*json)["model_base64"].asString());
-    try {
-      std::ofstream file("model", std::ios::trunc | std::ios::binary);
-      std::ostream_iterator<char> output_iterator(file);
-      std::copy(decoded.begin(), decoded.end(), output_iterator);
-    } catch (std::exception e) {
-      std::cerr << e.what() << std::endl;
-    }
+    std::ofstream file("model", std::ios::trunc | std::ios::binary);
+    std::ostream_iterator<char> output_iterator(file);
+    std::copy(decoded.begin(), decoded.end(), output_iterator);
+    torch::jit::ExtraFilesMap e;
+    torch::jit::load_jit_module_from_file("model", e);
+
     callback();
   });
 

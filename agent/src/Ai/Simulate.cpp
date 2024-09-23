@@ -75,7 +75,7 @@ int simulate(Score &score) {
 int main() {
   Score score;
   auto call = std::bind(simulate, score);
-  LuigiClient::fetchModel("http://172.18.0.2:8000", 0, [&score]() {
+  LuigiClient::fetchModel("http://trainer:8000", 0, [&score]() {
     int ret = simulate(score);
     score.report(ret);
   });
