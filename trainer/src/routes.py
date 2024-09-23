@@ -1,11 +1,12 @@
+import array
 from fastapi import APIRouter, BackgroundTasks, Depends
 from pydantic import BaseModel
-import torch
 from typing import List
 from db_handler import DBHandler
 from trainer import Trainer
 from logger import setup_logger
 from model import SimpleModel
+import torch
 import base64
 import io
 
@@ -25,15 +26,15 @@ class LogData(BaseModel):
     message: str
 
 class Steps(BaseModel):
-    mario_x: [int]
-    mario_y: [int]
-    mario_x_speed: [int]
-    action:  [int]
+    mario_x: List[int]
+    mario_y: List[int]
+    mario_x_speed: List[int]
+    action:  List[int]
 
 class Episode(BaseModel):
     modelid: int
     final_score: int
-    steps: Steps
+    states: Steps
 
 def get_db():
     db = DBHandler()
@@ -46,17 +47,23 @@ def get_logger(db: DBHandler = Depends(get_db)):
     return setup_logger(db)
 
 @router.post("/get_model")
-async def get_action(data: InputData, db: DBHandler = Depends(get_db), logger = Depends(get_logger)):
-    model, optimizer = db.load_model(data.modelid)
+async def get_action(model_id, db: DBHandler = Depends(get_db), logger = Depends(get_logger)):
+    model, optimizer = db.load_model(model_id)
     if model is None:
-        logger.warning(f"Model {data.modelid} not found. Initializing new model.")
+        logger.warning(f"Model {model_id} not found. Initializing new model.")
         model = SimpleModel()
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-        db.save_model(data.modelid, model, optimizer)
+        db.save_model(model_id, model, optimizer)
 
     # Serialize the model state_dict to a byte stream
     model_buffer = io.BytesIO()
-    torch.save(model.state_dict(), model_buffer)
+    
+    model.eval()
+
+    faux_input = torch.randn(60*64)
+    traced_model = torch.jit.trace(model, faux_input)
+
+    torch.jit.save(traced_model, model_buffer)
     model_buffer.seek(0)
     
     # Encode the model bytes to base64 so it can be sent in the JSON response
@@ -66,6 +73,7 @@ async def get_action(data: InputData, db: DBHandler = Depends(get_db), logger = 
 
 @router.post("/submit_episode")
 async def submit_score(data: Episode, background_tasks: BackgroundTasks, db: DBHandler = Depends(get_db), logger = Depends(get_logger)):
+    logger.info(f"received states: {str(data.states)}")
     
     model, optimizer = db.load_model(data.modelid)
     if model is None:

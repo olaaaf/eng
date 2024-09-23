@@ -19,6 +19,7 @@
       }
     }
   },
-	"forwardPorts": [8000],
-  "postCreateCommand": "cd trainer && poetry install --no-root"
+  "forwardPorts": [8000],
+  "postCreateCommand": "cd trainer && poetry install --no-root",
+  "runArgs": ["--network=shared", "--hostname=trainer"]
 }
