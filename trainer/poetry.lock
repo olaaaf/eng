@@ -200,6 +200,73 @@ docs = ["ipython", "matplotlib", "numpydoc", "sphinx"]
 tests = ["pytest", "pytest-cov", "pytest-xdist"]
 
 [[package]]
+name = "cynes"
+version = "0.1.0"
+description = "C/C++ NES emulator with Python bindings"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "cynes-0.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:65c8d009c516427588656500cc130d4f51bad8c18d3e8547615af3941281854f"},
+    {file = "cynes-0.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:14591ffbf452cfb71a9c604a1a31176ca40c28a33ff303cd45a13a62066352a2"},
+    {file = "cynes-0.1.0-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1ef8817b62a478311da3aa15388d506b1c7351aa2acbf4b7e70dac3fae815b8d"},
+    {file = "cynes-0.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fbffa1cc9d75d70fc1d286cc5d6c2e89d7a445c098cc8b7c843f435ba9e83f6d"},
+    {file = "cynes-0.1.0-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:e068d5452054fa90f0bb910038aa13cbded65576cc41a5e5a42cfc63dfd4b4af"},
+    {file = "cynes-0.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:2e05470bbb5c8d8ac3e6dfed76ced967ebb541b2781e938ff0ca8be121ef78b8"},
+    {file = "cynes-0.1.0-cp310-cp310-win32.whl", hash = "sha256:d23a46cae82115ed0c65cd76e026734c2ae5d89b93356c7a7125850466f63661"},
+    {file = "cynes-0.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:cdeeec77d04bdb82650850385ee14726e3a4eac09ad4b339fe46946b88a510b6"},
+    {file = "cynes-0.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:b96da8b6fe8e9aa996bb7ddffb6cbe53a656ab8d850c15d9bb6ecc715df3c46f"},
+    {file = "cynes-0.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:efd6f4ae0cd41a9000ff7668d0a2cbbda3edcc1642d90d839afd60215f268fb6"},
+    {file = "cynes-0.1.0-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:28da27a8694e661c507ae4c7309da2c08b7874cd7f71090321e6afd783d97af5"},
+    {file = "cynes-0.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b0a612ec09361bfd0192c4c02ef3085de05243380b8f9c67b771bb3ee479b107"},
+    {file = "cynes-0.1.0-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:d1f93f970b8ef839ed16b542271b21905c167f2aae4a08edcde36ca694bbe7bf"},
+    {file = "cynes-0.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:76e63ad6c5d241e2e802a66832a681a103a8a61206d111ab8a8da8310488b92c"},
+    {file = "cynes-0.1.0-cp311-cp311-win32.whl", hash = "sha256:65f2ba0e66e5376e9c03baf732406d26360f6e2a655def363aaf998635847811"},
+    {file = "cynes-0.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:4c14be0a3a5987ec91ca2f71214dfcb72dd7573b308488faf1f2c46b3d57e949"},
+    {file = "cynes-0.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:66d0e0b87840cdf85e52c3f6891f99fce1ebb4593dd8f33e34d0b9fae85dbfa3"},
+    {file = "cynes-0.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f633c5031c8c4c427d4ff350f10f81d633c62f6bd4f7ae397b8840e13d6a6f11"},
+    {file = "cynes-0.1.0-cp312-cp312-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c46fa886ad2e5d03fb56b1862ab7d628681cdba98c105707faf81884a7f9be01"},
+    {file = "cynes-0.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dd8277a6fba14659a47439fd72d1ac698cdedb3657243a30d938ea96c5f9e306"},
+    {file = "cynes-0.1.0-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:09db47312030fba2b80f541c1e40e7f629d470f6c000e0f9373f2bdb310e9e94"},
+    {file = "cynes-0.1.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:6e65300679d0281563724c4f8da9d6d0fb13551004f9035c02ca1cdec4497612"},
+    {file = "cynes-0.1.0-cp312-cp312-win32.whl", hash = "sha256:c1076c888cc4deae46137624cfbf7be3baabea6f6f9462df7393be75b5d4bf76"},
+    {file = "cynes-0.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:2ffda91ee19b9eab29a885bda3cbba80ddafce6f36f94b720f0f8a68dac4496c"},
+    {file = "cynes-0.1.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:a2222f1dce9a51685951cde32363dba4efc019e8d19ca9c6660f1a6653ddc847"},
+    {file = "cynes-0.1.0-cp36-cp36m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:97c0db2437042aa3ee3c5d66cedba843f374a8ac8c500b3f7d9ccfb84ee9bdd1"},
+    {file = "cynes-0.1.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1036eea895130d81896af0ae158ac7430694a8ca98d239ae1455f35d52ee07e4"},
+    {file = "cynes-0.1.0-cp36-cp36m-musllinux_1_1_i686.whl", hash = "sha256:adcf45dd63022952a4c9c9cb28f35677d398701b782802b9aca1de0cbc277821"},
+    {file = "cynes-0.1.0-cp36-cp36m-musllinux_1_1_x86_64.whl", hash = "sha256:55b50c25dd5475be34ac73da61857fc38142c007e7793e8f32051a5f5636b104"},
+    {file = "cynes-0.1.0-cp36-cp36m-win32.whl", hash = "sha256:993f65a3a2dd887e60a4388e0f5d2b577d8c7e06945b2110ab77542a8fd79c1e"},
+    {file = "cynes-0.1.0-cp36-cp36m-win_amd64.whl", hash = "sha256:b823ceb852148c8cca6760e8c4cefa3f7b13d56c0e184ad654da9aa96260a153"},
+    {file = "cynes-0.1.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:bd58a525016f5cb002aa64d121aac6e00cc465636d10cecbdaab8c376dcad99e"},
+    {file = "cynes-0.1.0-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ef4e95095faa447a6c40df3053d61394c5d330b4eb375feaf639846dd97966fa"},
+    {file = "cynes-0.1.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1ec8b57530f91d2e13bdd599f57b0876f5f53ab4cd5f56ca58e0068486a9f480"},
+    {file = "cynes-0.1.0-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:09c6e042d504eea6e577b803b31e60339383a6870d4b405f2796e222bf73f40d"},
+    {file = "cynes-0.1.0-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:195a7701183de9738982d262f840d7caa90e456f9da922385350421d79c295d8"},
+    {file = "cynes-0.1.0-cp37-cp37m-win32.whl", hash = "sha256:7155589fa5c07d221b24aaa78cfaed9d0a0a6fafecb7de60b69f0dfeb4df6285"},
+    {file = "cynes-0.1.0-cp37-cp37m-win_amd64.whl", hash = "sha256:ae32b7d87af1250b6f5e0bca514644cfc9da1b1ef3371f870eccd4da6693be77"},
+    {file = "cynes-0.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:296c835a6794672f2f25c2cd0976daae1e35a0eeab9b8572a60aa8cc699dd713"},
+    {file = "cynes-0.1.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:e1ff439fc95775a76ad5918571b9bcfeda3bc9719790159aa8b221373d348def"},
+    {file = "cynes-0.1.0-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:dbdbb030299be43d7cf422b04fa5cffdd1bacd1b61566babcabcbce567622e6a"},
+    {file = "cynes-0.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1a5c376651fa5e49ebfb6c44f8ca51b9bba15c7d53511d8f2adb2ddb8b6ed0eb"},
+    {file = "cynes-0.1.0-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:4508af7ee693d35e6b17d7f3f18e615b0b253e0b4eae6ad72c0de9b2d9746d46"},
+    {file = "cynes-0.1.0-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:49aeaceac04195d2e36fd5b09bcd858ccce6d4bff8a669172305e157fe8bbabe"},
+    {file = "cynes-0.1.0-cp38-cp38-win32.whl", hash = "sha256:d394338a31493d2daa50f767ea6693b0c97618fcf8be03bade15147b15dd7175"},
+    {file = "cynes-0.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:9aaa761e2434c15fc2598eafe871e37444243cc852bc31bcebb0332c2f3e732b"},
+    {file = "cynes-0.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:8febcfd7ecba78baf0c3b98502e939f6c94a50f759f649ddee3e2253974a4d76"},
+    {file = "cynes-0.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:0240f98d107d00d60cbf38abe55973d55eba546f684e62f0d3eb4f627e52c519"},
+    {file = "cynes-0.1.0-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f45db82b71b52a7de9475e9d46a9ac68717bafe70c21117c1131fccae86386f2"},
+    {file = "cynes-0.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:36bac3e717c52ef3ac6cac1682534b903beba4d9e0ffb72311cd4d5e35f277c6"},
+    {file = "cynes-0.1.0-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:11744b07e1a82e59879f2b38b5b3e8ecb8f5a54ee08b50b890bbff9c34d1e038"},
+    {file = "cynes-0.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:ab8249a2ec3a65f9dd4b196685fe35983417dd0c498f1936abcc75cc63667d83"},
+    {file = "cynes-0.1.0-cp39-cp39-win32.whl", hash = "sha256:5faeb2742cbd31b8f78714ba7d069c56fd1d4923144ba679b70e836acfb85414"},
+    {file = "cynes-0.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:1dfa92223a14783d927d12d68a71d4e695f36b4632e0f20ab041ab76399c409d"},
+    {file = "cynes-0.1.0.tar.gz", hash = "sha256:a05875c0020f525856d304e85edc57a42187ef193fbd42653dc71216d8d4d06e"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "cython"
 version = "3.0.11"
 description = "The Cython compiler for writing C extensions in the Python language."
@@ -1396,17 +1463,6 @@ files = [
 ]
 
 [[package]]
-name = "pyntendo"
-version = "0.0.8"
-description = "A Nintendo Entertainment System (NES) emulator in Python and Cython"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "pyntendo-0.0.8-cp37-cp37m-macosx_10_7_x86_64.whl", hash = "sha256:00c392ca1a71149c535d32dadac365c49f8b3564ec4a1517f9ca7c76f28f4e94"},
-    {file = "pyntendo-0.0.8.tar.gz", hash = "sha256:bbf84e3e750f9ba87d2032d8a5cbae83684d4eccb390d886b7c521214ccdaeec"},
-]
-
-[[package]]
 name = "pyparsing"
 version = "3.1.4"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -1743,4 +1799,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "f78865d4e35a4557ad764eef3ce047b1903b18f9a3f0abe2a48087da8b2610d7"
+content-hash = "55e375acdec38e2e1aff3e27cbd99997b56e033ca612b7f59da275bd1db3e257"

@@ -40,3 +40,4 @@ build
 *.synctex(busy)
 *.synctex.gz(busy)
 
+__pycache__
