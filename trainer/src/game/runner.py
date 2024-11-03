@@ -1,25 +1,27 @@
+from typing import List
+
+import cv2
+import numpy as np
 from cynes import (
     NES,
-    NES_INPUT_START,
-    NES_INPUT_RIGHT,
-    NES_INPUT_LEFT,
-    NES_INPUT_UP,
-    NES_INPUT_DOWN,
     NES_INPUT_A,
     NES_INPUT_B,
+    NES_INPUT_DOWN,
+    NES_INPUT_LEFT,
+    NES_INPUT_RIGHT,
+    NES_INPUT_START,
+    NES_INPUT_UP,
 )
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import cv2
-from numpy import astype
-from eval import Step
-from typing import List
-from torch import tensor
 from torch import float32 as tf32
+from torch import tensor
+
+from eval import Step
 
 
 class Runner:
-    def __init__(self, size=(64, 60), frame_skip=2, rom_path="mario.nes"):
+    max_frames = 6000
+
+    def __init__(self, size=(64, 60), record=False, frame_skip=2, rom_path="mario.nes"):
         self.nes = NES(rom_path)
         self.nes.step(frames=40)
         self.nes.controller = NES_INPUT_START
@@ -28,6 +30,10 @@ class Runner:
         self.nes.step(frames=85)
         self.size = size
         self.frame_skip = frame_skip
+        self.record = record
+        if self.record:
+            self.frames = np.ndarray((size[0], size[1], Runner.max_frames), dtype=int)
+            self.current_frame = 0
 
         self.step = Step()
 
@@ -48,12 +54,19 @@ class Runner:
         self.step.step(
             x_position, y_position_on_screen, horizontal_speed, self.frame_skip, lives
         )
+        if lives != 2:
+            # save the recording to the db
+            pass
+
 
     def __scale_down(self):
         self.buffer = cv2.cvtColor(
             cv2.resize(self.buffer, self.size), cv2.COLOR_RGB2GRAY
         )
-
+        if self.record:
+            if self.current_frame < Runner.max_frames:
+                self.frames[self.current_frame] = self.buffer
+                self.current_frame += 1
         self.tensor = tensor(self.buffer, dtype=tf32).flatten()
         self.tensor /= 255.0
 
@@ -86,46 +99,3 @@ class Runner:
         if controller[5]:
             text += "B"
         return text
-
-
-import torch
-import torch.nn as nn
-
-
-class SimpleModel(nn.Module):
-    def __init__(self, random_weights=True):
-        super(SimpleModel, self).__init__()
-        self.fc1 = nn.Linear(3840, 128)
-        self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 6)
-        if random_weights:
-            nn.init.xavier_uniform(self.fc1.weight)
-            nn.init.xavier_uniform(self.fc2.weight)
-            nn.init.xavier_uniform(self.fc3.weight)
-
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return [1 if a > 0.5 else 0 for a in torch.sigmoid(self.fc3(x))]
-
-    def save_model(self, path):
-        torch.save(self.state_dict(), path)
-
-    @classmethod
-    def load_model(cls, path):
-        model = cls()
-        model.load_state_dict(torch.load(path))
-        return model
-
-
-r = Runner()
-model = SimpleModel()
-input = r.next()
-print(input.size())
-output = model.forward(input)
-while not r.step.died:
-    input = r.next(output)
-    output = model.forward(input)
-
-    print(f"output: {r.controller_to_text(output)}")
-

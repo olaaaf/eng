@@ -26,4 +26,3 @@ class SimpleModel(nn.Module):
         model = cls()
         model.load_state_dict(torch.load(path))
         return model
-

@@ -1,10 +1,8 @@
-import numpy as np
-
 class Step:
     def __init__(self):
-        self.x_pos = np.array([], dtype=int)
-        self.y_pos = np.array([], dtype=int)
-        self.horizontal_speed = np.array([], dtype=int)
+        self.x_pos = []
+        self.y_pos = []
+        self.horizontal_speed = []
         self.died = False
         self.time = 0
 
