@@ -1,10 +1,13 @@
+import io
 import json
 from typing import Generator
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+import matplotlib.pyplot as plt
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from PIL import Image
 
 from util.db_handler import DBHandler
 
@@ -19,6 +22,51 @@ def get_db() -> Generator[DBHandler, None, None]:
         yield db
     finally:
         db.close()
+
+
+def create_overlay_graph(x_positions, y_positions) -> bytes:
+    """
+    Create a graph overlay on the map image with flipped y coordinates.
+    Returns the image as bytes.
+    """
+    # Load the background image
+    background = Image.open("util/static/map.png")
+
+    # Create figure with the same size as the background
+    dpi = 100
+    figsize = (background.size[0] / dpi, background.size[1] / dpi)
+    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+
+    # Display the background image
+    ax.imshow(background, extent=[0, 3584, 0, 240])
+
+    # Flip y coordinates
+    flipped_y = [240 - y for y in y_positions]
+
+    # Plot the path
+    ax.plot(x_positions, flipped_y, "r-", linewidth=2, alpha=0.7)
+
+    # Add start and end points
+    ax.scatter(
+        x_positions[0], flipped_y[0], color="green", s=100, label="Start", zorder=5
+    )
+    ax.scatter(
+        x_positions[-1], flipped_y[-1], color="red", s=100, label="End", zorder=5
+    )
+
+    # Configure the plot
+    ax.set_xlim(0, 3584)
+    ax.set_ylim(0, 240)
+    ax.axis("off")
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+    # Save to bytes buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, dpi=dpi)
+    plt.close(fig)
+    buf.seek(0)
+
+    return buf.getvalue()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -93,3 +141,20 @@ async def result_detail(
             "y_positions": y_positions,
         },
     )
+
+
+@app.get("/dynamic-graph/{result_id}")
+async def dynamic_graph(result_id: int, db: DBHandler = Depends(get_db)):
+    """
+    Generate and return the dynamic graph overlay image for a specific result
+    """
+    result = db.get_results(result_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Result not found")
+
+    result_data = result[0]
+    x_positions = json.loads(result_data[3])["x_positions"]
+    y_positions = json.loads(result_data[4])["y_positions"]
+
+    image_bytes = create_overlay_graph(x_positions, y_positions)
+    return Response(content=image_bytes, media_type="image/png")

@@ -23,6 +23,7 @@ class DBHandler:
                 """
                 CREATE TABLE IF NOT EXISTS models (
                     id INTEGER PRIMARY KEY,
+                    train_count INTEGER,
                     model_data BLOB,
                     optimizer_data BLOB
                 )
@@ -64,6 +65,17 @@ class DBHandler:
             """
             )
 
+    def increase_train_count(self, model_id):
+        with self.conn:
+            self.conn.execute(
+                """
+                UPDATE models
+                SET train_count = COALESCE(train_count, 0) + 1
+                WHERE id = ?
+                """,
+                (model_id,),
+            )
+
     def save_model(self, model_id, model, optimizer):
         model_buffer = io.BytesIO()
         torch.save(model.state_dict(), model_buffer)
@@ -73,27 +85,36 @@ class DBHandler:
         with self.conn:
             self.conn.execute(
                 """
-                INSERT OR REPLACE INTO models (id, model_data, optimizer_data)
-                VALUES (?, ?, ?)
+                INSERT OR REPLACE INTO models (id, train_count, model_data, optimizer_data)
+                VALUES (?, 0, ?, ?)
             """,
                 (model_id, model_buffer.getvalue(), optimizer_buffer.getvalue()),
             )
 
-    def load_model(self, model_id) -> tuple[SimpleModel, torch.optim.Optimizer]:
+    def load_model(
+        self, model_id
+    ) -> tuple[int, SimpleModel | None, torch.optim.Optimizer | None]:
         with self.conn:
             cursor = self.conn.execute(
-                "SELECT model_data, optimizer_data FROM models WHERE id = ?",
+                "SELECT train_count, model_data, optimizer_data FROM models WHERE id = ?",
                 (model_id,),
             )
             row = cursor.fetchone()
             if row:
-                model_data, optimizer_data = row
+                times_trained, model_data, optimizer_data = row
                 model = SimpleModel()
                 model.load_state_dict(torch.load(io.BytesIO(model_data)))
                 optimizer = torch.optim.Adam(model.parameters())
                 optimizer.load_state_dict(torch.load(io.BytesIO(optimizer_data)))
-                return model, optimizer
-            return None, None
+                return times_trained, model, optimizer
+            return 0, None, None
+
+    def get_train_count(self, model_id):
+        cursor = self.conn.execute(
+            "SELECT train_count FROM models WHERE id = ?", (model_id,)
+        )
+        result = cursor.fetchone()
+        return result[0] if result else 0
 
     def save_log(self, timestamp, level, message):
         with self.conn:

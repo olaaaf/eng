@@ -21,7 +21,7 @@ from game.eval import Step
 class Runner:
     max_frames = 6000
 
-    def __init__(self, size=(64, 60), record=False, frame_skip=2, rom_path="mario.nes"):
+    def __init__(self, size=(64, 60), record=False, frame_skip=4, rom_path="mario.nes"):
         self.rom_path = rom_path
         self.record = record
         self.size = size
@@ -80,6 +80,7 @@ class Runner:
         self.buffer = self.nes.step(frames=self.frame_skip)
 
     def __convert_input(self, controller: List[int]) -> int:
+        controller = [int(np.ceil(x)) for x in controller]
         return (
             controller[0] * NES_INPUT_RIGHT
             | controller[1] * NES_INPUT_LEFT
@@ -104,3 +105,10 @@ class Runner:
         if controller[5]:
             text += "B"
         return text
+
+    def get_reward(self):
+        # Reward based on the x_position, with a bonus if the level is finished
+        reward = self.step.x_pos[-1]  # Latest x_position
+        # if self.finished:
+        #    reward += 4000  # Bonus for completing the level
+        return reward

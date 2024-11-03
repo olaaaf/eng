@@ -16,7 +16,9 @@ class SimpleModel(nn.Module):
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
-        return [1 if a > 0.5 else 0 for a in torch.sigmoid(self.fc3(x))]
+        return (
+            torch.sigmoid(self.fc3(x)) > 0.5
+        ).float()  # Element-wise comparison to produce 0s and 1s
 
     def save_model(self, path):
         torch.save(self.state_dict(), path)
