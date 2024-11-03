@@ -15,27 +15,34 @@ from cynes import (
 from torch import float32 as tf32
 from torch import tensor
 
-from eval import Step
+from game.eval import Step
 
 
 class Runner:
     max_frames = 6000
 
     def __init__(self, size=(64, 60), record=False, frame_skip=2, rom_path="mario.nes"):
-        self.nes = NES(rom_path)
+        self.rom_path = rom_path
+        self.record = record
+        self.size = size
+        self.frame_skip = frame_skip
+        self.reset()
+        self.finished = True
+
+    def reset(self):
+        self.nes = NES(self.rom_path)
         self.nes.step(frames=40)
         self.nes.controller = NES_INPUT_START
         self.nes.step(frames=85)
         self.nes.controller = 0
         self.nes.step(frames=85)
-        self.size = size
-        self.frame_skip = frame_skip
-        self.record = record
-        if self.record:
-            self.frames = np.ndarray((size[0], size[1], Runner.max_frames), dtype=int)
-            self.current_frame = 0
-
+        self.alive = True
         self.step = Step()
+        if self.record:
+            self.frames = np.ndarray(
+                (self.size[0], self.size[1], Runner.max_frames), dtype=int
+            )
+            self.current_frame = 0
 
     def next(self, controller: List[int] = [0, 0, 0, 0, 0, 0]):
         c = self.__convert_input(controller)
@@ -55,9 +62,7 @@ class Runner:
             x_position, y_position_on_screen, horizontal_speed, self.frame_skip, lives
         )
         if lives != 2:
-            # save the recording to the db
-            pass
-
+            self.alive = False
 
     def __scale_down(self):
         self.buffer = cv2.cvtColor(

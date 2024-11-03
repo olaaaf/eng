@@ -1,4 +1,6 @@
 import io
+import json
+import logging
 import sqlite3
 
 import torch
@@ -10,6 +12,10 @@ class DBHandler:
     def __init__(self, db_path="models.db"):
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.create_tables()
+        self.logger: logging.Logger
+
+    def init_logger(self, logger: logging.Logger):
+        self.logger = logger
 
     def create_tables(self):
         with self.conn:
@@ -26,11 +32,9 @@ class DBHandler:
                 """
                 CREATE TABLE IF NOT EXISTS logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    model_id INTEGER,
                     timestamp TEXT,
                     level TEXT,
                     message TEXT
-                    FOREIGN KEY (model_id) REFERENCES models (id)
                 )
             """
             )
@@ -51,7 +55,6 @@ class DBHandler:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     model_id INTEGER,
                     timestamp TEXT,
-                    path TEXT,
                     x_positions BLOB,
                     y_positions BLOB,
                     time INTEGER,
@@ -60,7 +63,6 @@ class DBHandler:
                 )
             """
             )
-
 
     def save_model(self, model_id, model, optimizer):
         model_buffer = io.BytesIO()
@@ -77,7 +79,7 @@ class DBHandler:
                 (model_id, model_buffer.getvalue(), optimizer_buffer.getvalue()),
             )
 
-    def load_model(self, model_id):
+    def load_model(self, model_id) -> tuple[SimpleModel, torch.optim.Optimizer]:
         with self.conn:
             cursor = self.conn.execute(
                 "SELECT model_data, optimizer_data FROM models WHERE id = ?",
@@ -93,7 +95,7 @@ class DBHandler:
                 return model, optimizer
             return None, None
 
-    def save_log(self, timestamp, level, message, model_id):
+    def save_log(self, timestamp, level, message):
         with self.conn:
             self.conn.execute(
                 """
@@ -117,34 +119,54 @@ class DBHandler:
             )
             return cursor.fetchall()
 
-    def get_recordings_list(self, model_id):
+    def get_recordings_list(self):
         with self.conn:
             cursor = self.conn.execute(
-                "SELECT (id, timestamp, path)  FROM recrodings WHERE model_id is ? ORDER BY id DESC", (model_id)
+                "SELECT id, model_id, timestamp, path FROM recordings ORDER BY id DESC"
             )
             return cursor.fetchall()
 
-    def get_recording(self, id):
-        pass
-
     def get_models(self):
         with self.conn:
-            cursor = self.conn.execute(
-                "SELECT id FROM models"
-            )
+            cursor = self.conn.execute("SELECT id FROM models")
             return cursor.fetchall()
 
     def close(self):
         self.conn.close()
 
-    def save_recording(self, model_id):
-        pass
+    def save_recording(self, model_id, timestamp, path):
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO recordings (model_id, timestamp, path)
+                VALUES (?, ?, ?)
+            """,
+                (model_id, timestamp, path),
+            )
 
-    def save_results(self):
-        pass
+    def save_results(self, model_id, timestamp, x_positions, y_positions, time, died):
+        x_positions = json.dumps({"x_positions": x_positions})
+        y_positions = json.dumps({"y_positions": y_positions})
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO results (model_id, timestamp, x_positions, y_positions, time, died)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """,
+                (model_id, timestamp, x_positions, y_positions, time, died),
+            )
 
-    def get_results_list(self, model_id):
-        pass
+    def get_results_list(self):
+        with self.conn:
+            cursor = self.conn.execute(
+                "SELECT id, model_id, timestamp, time, died FROM results ORDER BY id DESC",
+            )
+            return cursor.fetchall()
 
     def get_results(self, results_id):
-        pass
+        with self.conn:
+            cursor = self.conn.execute(
+                "SELECT id, model_id, timestamp, x_positions, y_positions, time, died FROM results WHERE id is ?",
+                (results_id,),
+            )
+            return cursor.fetchall()
