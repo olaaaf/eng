@@ -22,3 +22,6 @@ class Step:
         db.save_results(
             model_id, timestamp, self.x_pos, self.y_pos, self.time, self.died
         )
+
+    def to_tensor(self):
+        pass

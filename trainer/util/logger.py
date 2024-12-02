@@ -12,8 +12,8 @@ class DBLogger(logging.Handler):
         self.db_handler.save_log(timestamp, record.levelname, self.format(record))
 
 
-def setup_logger(db_handler) -> logging.Logger:
-    logger = logging.getLogger("model_server")
+def setup_logger(db_handler, name) -> logging.Logger:
+    logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
     # Console handler
@@ -34,4 +34,3 @@ def setup_logger(db_handler) -> logging.Logger:
     logger.addHandler(db_handler)
 
     return logger
-

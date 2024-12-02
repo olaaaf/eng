@@ -108,7 +108,11 @@ class Runner:
 
     def get_reward(self):
         # Reward based on the x_position, with a bonus if the level is finished
-        reward = self.step.x_pos[-1]  # Latest x_position
+        reward = max(self.step.x_pos) / 100  # Latest x_position
         # if self.finished:
         #    reward += 4000  # Bonus for completing the level
+        if self.step.time > 8000:
+            reward -= 10
+        if self.alive:
+            reward += 20
         return reward

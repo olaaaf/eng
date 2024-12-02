@@ -22,6 +22,7 @@ cynes = "^0.1.0"
 jinja2 = "^3.1.4"
 aiofiles = "^24.1.0"
 python-multipart = "^0.0.17"
+wandb = "^0.18.7"
 
 
 [build-system]

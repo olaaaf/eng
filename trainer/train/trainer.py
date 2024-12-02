@@ -5,6 +5,7 @@ import torch
 from game.runner import Runner
 from train.model import SimpleModel
 from util.db_handler import DBHandler
+from util.logger import setup_logger
 
 
 class Trainer:
@@ -15,7 +16,6 @@ class Trainer:
         model: SimpleModel,
         optimizer,
         db_handler: DBHandler,
-        logger,
         random_weight_threshold=5,
     ):
         self.model: SimpleModel = model
@@ -23,7 +23,7 @@ class Trainer:
         self.model_id = model_id
         self.optimizer = optimizer
         self.db_handler = db_handler
-        self.logger: logging.Logger = logger
+        self.logger: logging.Logger = setup_logger(db_handler, "trainer (model_id)")
         self.random_weight_threshold = (
             random_weight_threshold  # Threshold for applying random weights
         )
@@ -31,14 +31,6 @@ class Trainer:
 
     def store_step(self, state, action, reward):
         self.episode_data.append((state, action, reward))
-
-    def apply_random_weight_changes(self):
-        for param in self.model.parameters():
-            if param.requires_grad:
-                # Apply small random noise to weights
-                param.data += (
-                    torch.randn_like(param) * 0.01
-                )  # Adjust the multiplier for desired randomness
 
     async def evaluate(self):
         self.runner.reset()
@@ -93,7 +85,7 @@ class Trainer:
         self.logger.info(f"Training count for model {self.model_id}: {train_count}")
 
         # Always apply random weight changes, but with fading intensity
-        self.apply_random_weight_changes(train_count)
+        # self.apply_random_weight_changes(train_count)
 
         self.logger.info(f"Training model {self.model_id}")
 
