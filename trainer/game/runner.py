@@ -27,7 +27,6 @@ class Runner:
         self.size = size
         self.frame_skip = frame_skip
         self.reset()
-        self.finished = True
 
     def reset(self):
         self.nes = NES(self.rom_path)
@@ -43,6 +42,7 @@ class Runner:
                 (self.size[0], self.size[1], Runner.max_frames), dtype=int
             )
             self.current_frame = 0
+        return self.next()
 
     def next(self, controller: List[int] = [0, 0, 0, 0, 0, 0]):
         c = self.__convert_input(controller)
@@ -107,12 +107,29 @@ class Runner:
         return text
 
     def get_reward(self):
-        # Reward based on the x_position, with a bonus if the level is finished
-        reward = max(self.step.x_pos) / 100  # Latest x_position
-        # if self.finished:
-        #    reward += 4000  # Bonus for completing the level
-        if self.step.time > 8000:
+        # Base reward from position progress
+        position_delta = (
+            self.step.x_pos[-1] - self.step.x_pos[-2] if len(self.step.x_pos) > 1 else 0
+        )
+        reward = 0
+
+        # Reward for moving right
+        reward += position_delta * 0.1
+
+        # Penalty for moving left or not moving
+        if position_delta <= 0:
+            reward -= 0.1
+
+        # Speed bonus
+        if self.step.horizontal_speed[-1] > 0:
+            reward += 0.05
+
+        # Large penalty for death
+        if not self.alive:
             reward -= 10
-        if self.alive:
-            reward += 20
+
+        # Penalty for taking too long
+        if self.step.time > 8000:
+            reward -= 5
+
         return reward

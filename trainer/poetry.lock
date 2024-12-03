@@ -1709,6 +1709,16 @@ files = [
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
+name = "pysdl2"
+version = "0.9.16"
+description = "Python SDL2 bindings"
+optional = false
+python-versions = "*"
+files = [
+    {file = "PySDL2-0.9.16.tar.gz", hash = "sha256:1027406badbecdd30fe56e800a5a76ad7d7271a3aec0b7acf780ee26a00f2d40"},
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
@@ -2350,4 +2360,4 @@ workspaces = ["wandb-workspaces"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e351a8d84a32f7492e13b2c68245535882e873668a63d606569e269546496ceb"
+content-hash = "c74a78d727072562c5ff9466bdea6ec16ed994448c674c521111c3ce988c2314"

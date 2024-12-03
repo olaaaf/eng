@@ -8,9 +8,10 @@ from typing import Dict, Optional
 import torch
 from fastapi import FastAPI, HTTPException
 
+import wandb
 from game.runner import Runner
+from train.dqn_trainer import DQNTrainer
 from train.model import SimpleModel
-from train.trainer import Trainer
 from util.db_handler import DBHandler
 from util.logger import setup_logger
 from util.routes import app
@@ -19,7 +20,7 @@ from util.routes import app
 @dataclass
 class TrainingSession:
     thread: threading.Thread
-    trainer: Trainer
+    trainer: DQNTrainer
     stop_flag: threading.Event
 
 
@@ -63,19 +64,20 @@ async def startup_event():
     logger = setup_logger(db, "server")
     logger.info("Server started")
     db.init_logger(logger)
+    # wandb.config
 
 
-async def training_loop(trainer: Trainer, stop_flag: threading.Event):
+async def training_loop(trainer: DQNTrainer, stop_flag: threading.Event):
     """Training loop that checks for stop signal."""
     trainer.logger.info(f"Started training thread for model {trainer.model_id}")
     while not stop_flag.is_set():
         try:
             await trainer.evaluate()
-            await trainer.train()
         except Exception as e:
             trainer.logger.error(f"Error in training loop: {str(e)}")
             break
     trainer.logger.info(f"Training loop ended for model {trainer.model_id}")
+    trainer.cleanup()
 
 
 @app.post("/train_start/{model_id}")
@@ -88,23 +90,34 @@ async def train_start(model_id: int):
     # Initialize training components
     db = DBHandler()
     logger = setup_logger(db, "trainer_sever")
-
+    epsilon = 1
+    episode = 0
     # Load or create model
     try:
-        _, model, optimizer = db.load_model(model_id)
+        _, model, optimizer, epsilon, episode = db.load_model(model_id)
         if not model:
             model = SimpleModel()
+            epsilon = 1
+            episode = 0
             optimizer = torch.optim.Adam(model.parameters())
-            db.save_model(model_id, model, optimizer)
+            db.save_model(1, model_id, model, optimizer, episode)
     except Exception as e:
         logger.error(f"Error loading model {model_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Failed to load or create model: {str(e)}"
         )
 
+    model.train()
+    for param in model.parameters():
+        param.requires_grad = True
+
     # Create training components
     runner = Runner()
-    trainer = Trainer(model_id, runner, model, optimizer, db)
+    target_model = SimpleModel()  # Create target network
+    target_model.load_state_dict(model.state_dict())
+    trainer = DQNTrainer(
+        model_id, runner, model, target_model, optimizer, db, epsilon_start=epsilon, episode=episode 
+    )
     stop_flag = threading.Event()
 
     # Create and start training thread
