@@ -33,18 +33,7 @@ class Trainer:
         self.epsilon_decay = 0.995
         # Initialize wandb
         wandb.init(
-            project="mario",
-            config={
-                "model_id": model_id,
-                "gamma": 0.99,
-                "eps_start": 1.0,
-                "eps_end": 0.01,
-                "eps_decay": 0.995,
-                "buffer_size": 100000,
-                "batch_size": 32,
-                "target_update": 10,
-            },
-            reinit=True,
+            project="mario_b",
         )
 
     async def train(self):

@@ -40,6 +40,7 @@ class Runner:
         self.nes.step(frames=85)
         self.alive = True
         self.step = Step()
+        self.done = False
         if self.record:
             self.frames = np.ndarray(
                 (self.size[0], self.size[1], Runner.max_frames), dtype=int
@@ -62,11 +63,33 @@ class Runner:
         horizontal_speed = self.nes[0x0057]
         y_position_on_screen = self.nes[0x00CE]
         x_position = (x_horizontal << 8) | x_on_screen
+        score_bcd = [
+            self.nes[0x07DD],  # 1000000 and 100000 place
+            self.nes[0x07DE],  # 10000 and 1000 place
+            self.nes[0x07DF],  # 100 and 10 place
+            self.nes[0x07E0],  # 1 place (if applicable)
+            self.nes[0x07E1],  # 1 place (if applicable)
+            self.nes[0x07E2],  # 1 place (if applicable)
+        ]
+        level = self.nes[0x0760]
+        # Convert BCD to integer score
+        score = 0
+        for byte in score_bcd:
+            score = score * 100 + ((byte >> 4) * 10) + (byte & 0x0F)
+
         self.step.step(
-            x_position, y_position_on_screen, horizontal_speed, self.frame_skip, lives
+            x_position,
+            y_position_on_screen,
+            horizontal_speed,
+            self.frame_skip,
+            lives,
+            score,
         )
         if lives != 2:
             self.alive = False
+            self.done = True
+        if level == 1:
+            self.done = True
 
     def __scale_down(self):
         self.buffer = cv2.cvtColor(
@@ -113,20 +136,31 @@ class Runner:
     def get_reward(self):
         # Base reward from position progress
         position_delta = (
-            self.step.x_pos[-1] - self.step.x_pos[-2] if len(self.step.x_pos) > 10 else 0
+            self.step.x_pos[-1] - self.step.x_pos[-2] if len(self.step.x_pos) > 1 else 0
+        )
+        score_delta = (
+            self.step.score[-1] - self.step.score[-2] if len(self.step.score) > 1 else 0
         )
         reward = 0
 
         # Reward for moving right
-        reward += position_delta * 0.3
+        reward += position_delta * 0.2
 
         # Penalty for moving left or not moving
-        if position_delta <= 0:
+        if position_delta < 1e-9:
             reward -= 0.05
 
+        if score_delta > 0:
+            reward += score_delta * 0.005
+
         # Speed bonus
-        if self.step.horizontal_speed[-1] > 0:
+        if self.step.horizontal_speed[-1] > -1e-9:
             reward += 0.05
+
+        level = self.nes[0x0760]
+
+        if level == 1:
+            reward += 100
 
         # Large penalty for death
         if not self.alive:

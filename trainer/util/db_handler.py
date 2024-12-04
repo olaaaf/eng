@@ -33,6 +33,17 @@ class DBHandler:
             )
             self.conn.execute(
                 """
+                CREATE TABLE IF NOT EXISTS model_archives (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    model_id INTEGER,
+                    model_data BLOB,
+                    optimizer_data BLOB,
+                    FOREIGN KEY (model_id) REFERENCES models (id)
+                )
+            """
+            )
+            self.conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT,
@@ -96,6 +107,25 @@ class DBHandler:
                     optimizer_buffer.getvalue(),
                     epsilon,
                     episode,
+                ),
+            )
+
+    def save_model_archive(self, model_id, model, optimizer):
+        model_buffer = io.BytesIO()
+        torch.save(model.state_dict(), model_buffer)
+        optimizer_buffer = io.BytesIO()
+        torch.save(optimizer.state_dict(), optimizer_buffer)
+
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO model_archives (model_id, model_data, optimizer_data)
+                VALUES (?, ?, ?)
+            """,
+                (
+                    model_id,
+                    model_buffer.getvalue(),
+                    optimizer_buffer.getvalue(),
                 ),
             )
 
