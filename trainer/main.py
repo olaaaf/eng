@@ -119,13 +119,10 @@ async def train_start(model_id: int):
     config.create_default(model_id)
     reward_handler = ConfigFileReward(logger, model_id)
 
-    target_model = SimpleModel()  # Create target network
-    target_model.load_state_dict(model.state_dict())
     trainer = DQNTrainer(
         model_id,
         runner,
         model,
-        target_model,
         optimizer,
         db,
         epsilon_start=epsilon,

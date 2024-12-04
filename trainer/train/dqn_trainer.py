@@ -29,7 +29,7 @@ class DQNTrainer:
         # get the settings
         self.batch_size = reward_handler.to_dict()["batch_size"]
         self.gamma = reward_handler.to_dict()["gamma"]
-        self.epsilon_end = reward_handler.to_dict()["epsion_end"]
+        self.epsilon_end = reward_handler.to_dict()["epsilon_end"]
         self.epsilon_decay = reward_handler.to_dict()["epsilon_decay"]
         # load the epsilon value from earlier
         self.epsilon = epsilon_start
@@ -42,7 +42,7 @@ class DQNTrainer:
                 "model_id": model_id,
                 "batch_size": self.batch_size,
                 "gamma": self.gamma,
-                "epsilon_start": self.epsilon_start,
+                "epsilon_start": self.epsilon,
                 "epsilon_end": self.epsilon_end,
                 "epsilon_decay": self.epsilon_decay,
             },
