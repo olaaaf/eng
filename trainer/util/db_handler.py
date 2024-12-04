@@ -141,9 +141,13 @@ class DBHandler:
             if row:
                 times_trained, model_data, optimizer_data, epsilon, episode = row
                 model = SimpleModel()
-                model.load_state_dict(torch.load(io.BytesIO(model_data)))
+                model.load_state_dict(
+                    torch.load(io.BytesIO(model_data), weights_only=True)
+                )
                 optimizer = torch.optim.Adam(model.parameters())
-                optimizer.load_state_dict(torch.load(io.BytesIO(optimizer_data)))
+                optimizer.load_state_dict(
+                    torch.load(io.BytesIO(optimizer_data), weights_only=True)
+                )
                 return times_trained, model, optimizer, epsilon, episode
             return 0, None, None, 1, 0
 

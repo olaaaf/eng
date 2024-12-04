@@ -178,16 +178,22 @@ class DQNTrainer:
                 next_q_value = next_q_values.max()
                 if done:
                     next_q_value = 0.0
-
                 expected_q_value = reward + (self.gamma * next_q_value)
 
-            # Compute loss
+            # Reshape tensors to match dimensions
+            current_q_value = current_q_value.view(-1)  # Flatten to 1D
+            expected_q_value = torch.tensor([expected_q_value], device=self.device, dtype=torch.float32)  # No requires_grad
+
+            # Ensure same dtype
+            current_q_value = current_q_value.to(dtype=torch.float32)
+
+            # Compute loss - current_q_value should have gradients, expected_q_value is target
             loss = F.smooth_l1_loss(current_q_value, expected_q_value)
+            loss.requires_grad = True
             total_loss += loss.item()
 
             # Optimize
             self.optimizer.zero_grad()
-            loss.requires_grad = True
             loss.backward()
             self.optimizer.step()
 
