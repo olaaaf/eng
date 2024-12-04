@@ -28,4 +28,6 @@ with WindowedNES("mario.nes") as nes:
         for byte in score_bcd:
             score = score * 100 + ((byte >> 4) * 10) + (byte & 0x0F)
 
-        print(f"{x_position}, {level}, {score}")
+        print(
+            f"pos: {x_position}, level: {level}, score: {score}, horizontal_speed: {horizontal_speed}"
+        )

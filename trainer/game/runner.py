@@ -143,31 +143,35 @@ class Runner:
         )
         reward = 0
 
-        # Reward for moving right
-        reward += position_delta * 0.2
-
         # Penalty for moving left or not moving
         if position_delta < 1e-9:
-            reward -= 0.05
+            reward -= position_delta * 0.05
+        else:
+            # reward for moving right
+            reward += position_delta * 0.05
 
         if score_delta > 0:
             reward += score_delta * 0.005
 
         # Speed bonus
         if self.step.horizontal_speed[-1] > -1e-9:
-            reward += 0.05
+            reward += self.step.horizontal_speed[-1] * 0.001
 
         level = self.nes[0x0760]
 
         if level == 1:
-            reward += 100
+            reward += 200
 
         # Large penalty for death
         if not self.alive:
-            reward -= 10
+            reward -= 40
 
-        # Penalty for taking too long
-        if self.step.time > 8000:
-            reward -= 5
+        max_time = 9832
+        time_penalty_scale = 0.05  # Adjust to control the strength of the penalty
+        if self.step.time > 5000:
+            # Compute penalty as a function of time
+            time_over_5000 = self.step.time - 5000
+            penalty = time_penalty_scale * (time_over_5000 / (max_time - 5000)) ** 2
+            reward -= penalty
 
         return reward
