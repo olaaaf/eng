@@ -44,6 +44,7 @@ class Trainer:
                 "batch_size": 32,
                 "target_update": 10,
             },
+            reinit=True,
         )
 
     async def train(self):

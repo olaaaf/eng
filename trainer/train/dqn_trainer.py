@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 import wandb
 from game.runner import Runner
-from train.replay_buffer import Experience, ReplayBuffer
+from train.replay_buffer import ReplayBuffer
 from util.db_handler import DBHandler
 
 
@@ -21,7 +21,7 @@ class DQNTrainer:
         target_model,
         optimizer,
         db_handler: DBHandler,
-        batch_size: int = 32,
+        batch_size: int = 320,
         gamma: float = 0.99,
         epsilon_start: float = 1.0,
         epsilon_end: float = 0.01,
@@ -42,7 +42,7 @@ class DQNTrainer:
                 "epsilon_end": epsilon_end,
                 "epsilon_decay": epsilon_decay,
             },
-            reinit=True,  # Allow multiple runs
+            resume="allow",
         )
         self.model_id = model_id
         self.runner = runner
@@ -64,18 +64,24 @@ class DQNTrainer:
         self.total_steps = 0
 
         # Add device initialization
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "mps" if torch.backends.mps.is_available() else "cpu"
+        )
         self.model = self.model.to(self.device)
         self.target_model = self.target_model.to(self.device)
 
     def select_action(self, state: torch.Tensor) -> List[float]:
         if torch.rand(1) < self.epsilon:
-            return torch.rand(6).tolist()  # Random actions for 6 buttons
+            return (
+                (torch.rand(6) > 0.5).float().tolist()
+            )  # Random actions for 6 buttons
 
         with torch.no_grad():
+            state = state.to(self.device)
             q_values = self.model(state.unsqueeze(0))
-            actions = torch.sigmoid(q_values).squeeze(0)  # Convert to probabilities
-            return actions.tolist()
+            # Threshold at 0.5 to get binary actions
+            actions = (q_values.squeeze(0) > 0.5).float()
+            return actions.cpu().tolist()  # Conv
 
     async def evaluate(self):
         """Single training episode"""
@@ -86,7 +92,7 @@ class DQNTrainer:
         while self.runner.alive:
             # Select and perform action
             action = self.select_action(state)
-            next_state = self.runner.next(action)
+            next_state = self.runner.next(controller=action)
             reward = self.runner.get_reward()
             done = not self.runner.alive
 
@@ -121,7 +127,13 @@ class DQNTrainer:
 
         # Save model periodically
         if self.episode_count % 10 == 0:
-            self.db_handler.save_model(self.model_id, self.model, self.optimizer)
+            self.db_handler.save_model(
+                self.epsilon,
+                self.model_id,
+                self.model,
+                self.optimizer,
+                self.episode_count,
+            )
             self.db_handler.increase_train_count(self.model_id)
 
     def train(self, experiences):
@@ -130,8 +142,10 @@ class DQNTrainer:
 
         for state, action, reward, next_state, done in experiences:
             # Convert to tensors
-            state = torch.FloatTensor(state).to(self.device)
-            next_state = torch.FloatTensor(next_state).to(self.device)
+            state = torch.FloatTensor(state.to(torch.device("cpu"))).to(self.device)
+            next_state = torch.FloatTensor(next_state.to(torch.device("cpu"))).to(
+                self.device
+            )
             reward = torch.FloatTensor([reward]).to(self.device)
             action = torch.FloatTensor(action).to(self.device)
 
@@ -168,5 +182,5 @@ class DQNTrainer:
         if self.run:
             self.run.finish()
         self.db_handler.save_model(
-            self.epsilon, self.model_id, self.model, self.optimizer
+            self.epsilon, self.model_id, self.model, self.optimizer, self.episode_count
         )
