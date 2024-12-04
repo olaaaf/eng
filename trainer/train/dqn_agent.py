@@ -8,7 +8,7 @@ from train.replay_buffer import ReplayBuffer
 
 
 class DQNAgent:
-    def __init__(self, state_size, action_size, device="cpu"):
+    def __init__(self, state_size, action_size, device="mps"):
         self.state_size = state_size
         self.action_size = action_size
         self.device = device

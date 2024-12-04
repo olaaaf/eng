@@ -112,11 +112,18 @@ async def train_start(model_id: int):
         param.requires_grad = True
 
     # Create training components
-    runner = Runner()
+    runner = Runner(torch.device("mps" if torch.backends.mps.is_available() else "cpu"))
     target_model = SimpleModel()  # Create target network
     target_model.load_state_dict(model.state_dict())
     trainer = DQNTrainer(
-        model_id, runner, model, target_model, optimizer, db, epsilon_start=epsilon, episode=episode 
+        model_id,
+        runner,
+        model,
+        target_model,
+        optimizer,
+        db,
+        epsilon_start=epsilon,
+        episode=episode,
     )
     stop_flag = threading.Event()
 

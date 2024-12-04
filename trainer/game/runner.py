@@ -21,9 +21,12 @@ from game.eval import Step
 class Runner:
     max_frames = 6000
 
-    def __init__(self, size=(64, 60), record=False, frame_skip=4, rom_path="mario.nes"):
+    def __init__(
+        self, device, size=(64, 60), record=False, frame_skip=4, rom_path="mario.nes"
+    ):
         self.rom_path = rom_path
         self.record = record
+        self.device = device
         self.size = size
         self.frame_skip = frame_skip
         self.reset()
@@ -49,7 +52,8 @@ class Runner:
         self.__frame(c)
         self.__scale_down()
         self.get_metrics()
-        return self.tensor
+        # print(f"{self.step.time}: c\t{self.step.x_pos[-1]}")
+        return self.tensor.to(self.device)
 
     def get_metrics(self):
         lives = self.nes[0x75A]
@@ -109,16 +113,16 @@ class Runner:
     def get_reward(self):
         # Base reward from position progress
         position_delta = (
-            self.step.x_pos[-1] - self.step.x_pos[-2] if len(self.step.x_pos) > 1 else 0
+            self.step.x_pos[-1] - self.step.x_pos[-2] if len(self.step.x_pos) > 10 else 0
         )
         reward = 0
 
         # Reward for moving right
-        reward += position_delta * 0.1
+        reward += position_delta * 0.3
 
         # Penalty for moving left or not moving
         if position_delta <= 0:
-            reward -= 0.1
+            reward -= 0.05
 
         # Speed bonus
         if self.step.horizontal_speed[-1] > 0:
