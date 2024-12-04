@@ -11,6 +11,7 @@ import torch.nn.functional as F
 import wandb
 from game.runner import Runner
 from util.db_handler import DBHandler
+from train.helpers import Reward
 
 
 class DQNTrainer:
@@ -19,45 +20,41 @@ class DQNTrainer:
         model_id: int,
         runner: Runner,
         model,
-        target_model,
         optimizer,
         db_handler: DBHandler,
-        batch_size: int = 320,
-        gamma: float = 0.99,
+        reward_handler: Reward,
         epsilon_start: float = 1.0,
-        epsilon_end: float = 0.01,
-        epsilon_decay: float = 0.995,
-        target_update: int = 10,
         episode: int = 0,
     ):
+        # get the settings
+        self.batch_size = reward_handler.to_dict()["batch_size"]
+        self.gamma = reward_handler.to_dict()["gamma"]
+        self.epsilon_end = reward_handler.to_dict()["epsion_end"]
+        self.epsilon_decay = reward_handler.to_dict()["epsilon_decay"]
+        # load the epsilon value from earlier
+        self.epsilon = epsilon_start
+
         self.run = wandb.init(
             project="mario_b",
             name=f"model_{model_id}",
             id=f"run_{model_id}",
             config={
                 "model_id": model_id,
-                "batch_size": batch_size,
-                "gamma": gamma,
-                "epsilon_start": epsilon_start,
-                "epsilon_end": epsilon_end,
-                "epsilon_decay": epsilon_decay,
+                "batch_size": self.batch_size,
+                "gamma": self.gamma,
+                "epsilon_start": self.epsilon_start,
+                "epsilon_end": self.epsilon_end,
+                "epsilon_decay": self.epsilon_decay,
             },
             resume="allow",
         )
         self.model_id = model_id
         self.runner = runner
         self.model = model
-        self.target_model = target_model
         self.optimizer = optimizer
         self.db_handler = db_handler
         self.logger = logging.getLogger(f"trainer_{model_id}")
-
-        self.batch_size = batch_size
-        self.gamma = gamma
-        self.epsilon = epsilon_start
-        self.epsilon_end = epsilon_end
-        self.epsilon_decay = epsilon_decay
-        self.target_update = target_update
+        self.reward_handler = reward_handler
 
         self.episode_count = episode
         self.total_steps = 0
@@ -67,7 +64,6 @@ class DQNTrainer:
             "mps" if torch.backends.mps.is_available() else "cpu"
         )
         self.model = self.model.to(self.device)
-        self.target_model = self.target_model.to(self.device)
 
     def select_action(self, state: torch.Tensor) -> List[float]:
         if torch.rand(1) < self.epsilon:
@@ -92,7 +88,7 @@ class DQNTrainer:
             # Select and perform action
             action = self.select_action(state)
             next_state = self.runner.next(controller=action)
-            reward = self.runner.get_reward()
+            reward = self.reward_handler.get_reward(self.runner.step)
             done = not self.runner.alive
 
             # Store experience
@@ -113,10 +109,9 @@ class DQNTrainer:
 
         # Log metrics
         metrics = {
-            "episode": self.episode_count,
             "reward": episode_reward,
             "finished": (1.0 if self.runner.alive else 0.0),
-            "steps": self.runner.step.time,
+            "time": self.runner.step.time,
             "score": self.runner.step.score[-1],
             "epsilon": self.epsilon,
             "x_pos_dev": np.std(self.runner.step.x_pos),
@@ -126,14 +121,10 @@ class DQNTrainer:
             "max_x": max(self.runner.step.x_pos),
         }
         self.run.log(metrics)
-        self.logger.info(f"Episode {self.episode_count}: {metrics}")
 
-        # Save model periodically
         if self.episode_count % 10 == 0:
             try:
-                # Define the file path to save the model locally
                 model_save_path = f"model_episode_{self.episode_count}.pt"
-                # Save the model and optimizer state locally
                 torch.save(
                     {
                         "model_state_dict": self.model.state_dict(),
@@ -141,7 +132,6 @@ class DQNTrainer:
                     },
                     model_save_path,
                 )
-                # Save the model to wandb as an artifact
                 artifact = wandb.Artifact(
                     name=f"model_checkpoint_{self.model_id}",
                     type="model",
@@ -151,7 +141,6 @@ class DQNTrainer:
                 artifact.add_file(model_save_path)
                 self.run.log_artifact(artifact)
 
-                # Optionally, remove the local file after uploading to wandb
                 os.remove(model_save_path)
             except Exception as e:
                 self.logger.error(f"Failed to save model to wandb: {e}")
@@ -200,7 +189,6 @@ class DQNTrainer:
             self.optimizer.zero_grad()
             loss.requires_grad = True
             loss.backward()
-            # torch.nn.utils.clip_grad_value_(self.model.parameters(), 100)
             self.optimizer.step()
 
         # Log average loss for episode

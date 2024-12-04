@@ -12,9 +12,11 @@ import wandb
 from game.runner import Runner
 from train.dqn_trainer import DQNTrainer
 from train.model import SimpleModel
+from train.helpers import ConfigFileReward
 from util.db_handler import DBHandler
 from util.logger import setup_logger
 from util.routes import app
+import config
 
 
 @dataclass
@@ -113,6 +115,10 @@ async def train_start(model_id: int):
 
     # Create training components
     runner = Runner(torch.device("mps" if torch.backends.mps.is_available() else "cpu"))
+    # Create a config or load one for the reward system
+    config.create_default(model_id)
+    reward_handler = ConfigFileReward(logger, model_id)
+
     target_model = SimpleModel()  # Create target network
     target_model.load_state_dict(model.state_dict())
     trainer = DQNTrainer(
@@ -124,6 +130,7 @@ async def train_start(model_id: int):
         db,
         epsilon_start=epsilon,
         episode=episode,
+        reward_handler=reward_handler,
     )
     stop_flag = threading.Event()
 

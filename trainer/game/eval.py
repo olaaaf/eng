@@ -8,14 +8,16 @@ class Step:
         self.horizontal_speed = []
         self.died = False
         self.time = 0
+        self.level = 0
         self.score = []
 
-    def step(self, x, y, speed, frame_skip, lives, score):
+    def step(self, x, y, speed, frame_skip, lives, score, level):
         self.time += frame_skip
         self.x_pos.append(x)
         self.y_pos.append(y)
         self.score.append(score)
         self.horizontal_speed.append(speed)
+        self.level = level
         if lives != 2:
             self.died = True
 

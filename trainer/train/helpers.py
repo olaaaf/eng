@@ -25,7 +25,7 @@ class ConfigFileReward(Reward):
     def __init__(
         self, _logger: Logger, model_id: int, config_path: str = "rewards.json"
     ):
-        super().__init__(_logger)
+        super().__init__(_logger, model_id)
         self.settings: Dict
         self.punished_for_death = False
         self.rewarded_for_finish = False
@@ -33,14 +33,14 @@ class ConfigFileReward(Reward):
         try:
             with open(config_path) as file:
                 settings = json.loads(file.read())
-                self.settings = settings[model_id]
+                self.settings = settings[str(model_id)]
         except FileNotFoundError:
             super().logger.error(f"Config file {config_path} does not exist")
         except Exception as e:
             super().logger.error(f"Analyzing rewards configuration json: {e}")
 
     def to_dict(self) -> Dict:
-        return self.settings
+        return self.settings["config"]
 
     def get_reward(self, steps: Step) -> float:
         reward = 0
@@ -76,9 +76,9 @@ class ConfigFileReward(Reward):
 
         max_time = 9832
         time_penalty_scale = self.settings["time_penalty"]
-        if self.step.time > self.settings["time_penalty_start"]:
+        if steps.time > self.settings["time_penalty_start"]:
             # Compute penalty as a function of time
-            time_over = self.step.time - self.settings["time_penalty_start"]
+            time_over = steps.time - self.settings["time_penalty_start"]
             penalty = (
                 time_penalty_scale
                 * (time_over / (max_time - self.settings["time_penalty_start"])) ** 2
@@ -86,4 +86,3 @@ class ConfigFileReward(Reward):
             reward -= penalty
 
         return reward
-

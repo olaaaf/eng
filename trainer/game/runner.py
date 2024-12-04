@@ -84,6 +84,7 @@ class Runner:
             self.frame_skip,
             lives,
             score,
+            level,
         )
         if lives != 2:
             self.alive = False
@@ -132,46 +133,3 @@ class Runner:
         if controller[5]:
             text += "B"
         return text
-
-    def get_reward(self):
-        # Base reward from position progress
-        position_delta = (
-            self.step.x_pos[-1] - self.step.x_pos[-2] if len(self.step.x_pos) > 1 else 0
-        )
-        score_delta = (
-            self.step.score[-1] - self.step.score[-2] if len(self.step.score) > 1 else 0
-        )
-        reward = 0
-
-        # Penalty for moving left or not moving
-        if position_delta < 1e-9:
-            reward -= position_delta * 0.05
-        else:
-            # reward for moving right
-            reward += position_delta * 0.05
-
-        if score_delta > 0:
-            reward += score_delta * 0.005
-
-        # Speed bonus
-        if self.step.horizontal_speed[-1] > -1e-9:
-            reward += self.step.horizontal_speed[-1] * 0.001
-
-        level = self.nes[0x0760]
-
-        if level == 1:
-            reward += 200
-
-        # Large penalty for death
-        if not self.alive:
-            reward -= 40
-
-        max_time = 9832
-        time_penalty_scale = 0.05  # Adjust to control the strength of the penalty
-        if self.step.time > 5000:
-            # Compute penalty as a function of time
-            time_over_5000 = self.step.time - 5000
-            penalty = time_penalty_scale * (time_over_5000 / (max_time - 5000)) ** 2
-            reward -= penalty
-
-        return reward
