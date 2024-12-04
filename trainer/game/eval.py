@@ -8,7 +8,6 @@ class Step:
         self.horizontal_speed = []
         self.died = False
         self.time = 0
-        self.penalty = False
         self.score = []
 
     def step(self, x, y, speed, frame_skip, lives, score):

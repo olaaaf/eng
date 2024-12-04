@@ -10,7 +10,6 @@ import torch.nn.functional as F
 
 import wandb
 from game.runner import Runner
-from train.replay_buffer import ReplayBuffer
 from util.db_handler import DBHandler
 
 
@@ -60,7 +59,6 @@ class DQNTrainer:
         self.epsilon_decay = epsilon_decay
         self.target_update = target_update
 
-        self.replay_buffer = ReplayBuffer()
         self.episode_count = episode
         self.total_steps = 0
 
@@ -126,7 +124,6 @@ class DQNTrainer:
             / len(self.runner.step.horizontal_speed),
             "horizontal_speed_dev": np.std(self.runner.step.horizontal_speed),
             "max_x": max(self.runner.step.x_pos),
-            "buffer_size": len(self.replay_buffer),
         }
         self.run.log(metrics)
         self.logger.info(f"Episode {self.episode_count}: {metrics}")
