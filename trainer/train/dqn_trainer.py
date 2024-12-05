@@ -1,4 +1,3 @@
-# train/dqn_trainer.py
 import asyncio
 import logging
 import os
@@ -10,8 +9,8 @@ import torch.nn.functional as F
 
 import wandb
 from game.runner import Runner
-from util.db_handler import DBHandler
 from train.helpers import Reward
+from util.db_handler import DBHandler
 
 
 class DQNTrainer:
@@ -35,7 +34,7 @@ class DQNTrainer:
         self.epsilon = epsilon_start
 
         self.run = wandb.init(
-            project="mario_b",
+            project="mario_d",
             name=f"model_{model_id}",
             id=f"run_{model_id}",
             config={
@@ -119,10 +118,10 @@ class DQNTrainer:
             / len(self.runner.step.horizontal_speed),
             "horizontal_speed_dev": np.std(self.runner.step.horizontal_speed),
             "max_x": max(self.runner.step.x_pos),
-        }
+        } | self.reward_handler.get_sum()
         self.run.log(metrics)
 
-        if self.episode_count % 10 == 0:
+        if self.episode_count % 100 == 0:
             try:
                 model_save_path = f"model_episode_{self.episode_count}.pt"
                 torch.save(
@@ -182,7 +181,9 @@ class DQNTrainer:
 
             # Reshape tensors to match dimensions
             current_q_value = current_q_value.view(-1)  # Flatten to 1D
-            expected_q_value = torch.tensor([expected_q_value], device=self.device, dtype=torch.float32)  # No requires_grad
+            expected_q_value = torch.tensor(
+                [expected_q_value], device=self.device, dtype=torch.float32
+            )  # No requires_grad
 
             # Ensure same dtype
             current_q_value = current_q_value.to(dtype=torch.float32)
