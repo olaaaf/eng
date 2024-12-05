@@ -79,6 +79,7 @@ class DQNTrainer:
         reward_handler: Reward,
         epsilon_start: float = 1.0,
         episode: int = 0,
+        learning_rate: float = 1e-4,
     ):
         # Hyperparameters
         self.batch_size = reward_handler.to_dict()["batch_size"]
@@ -107,6 +108,7 @@ class DQNTrainer:
                 "epsilon_end": self.epsilon_end,
                 "epsilon_decay": self.epsilon_decay,
                 "target_update_freq": self.target_update_frequency,
+                "learning_rate": learning_rate
             },
             resume="allow",
         )
@@ -129,7 +131,7 @@ class DQNTrainer:
         self.optimizer = (
             optimizer
             if optimizer
-            else optim.Adam(self.online_model.parameters(), lr=1e-4)
+            else optim.Adam(self.online_model.parameters(), lr=learning_rate)
         )
 
         # Other configurations
@@ -271,7 +273,7 @@ class DQNTrainer:
 
         # Optimize
         self.optimizer.zero_grad()
-        #weighted_loss.requires_grad = True
+        # weighted_loss.requires_grad = True
         weighted_loss.backward()
         torch.nn.utils.clip_grad_norm_(self.online_model.parameters(), max_norm=1.0)
         self.optimizer.step()
