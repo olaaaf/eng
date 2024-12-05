@@ -129,6 +129,11 @@ class DBHandler:
                 ),
             )
 
+    def get_model_archives(self, model_id):
+        with self.conn:
+            cursor = self.conn.execute("SELECT id FROM model_archives")
+            return cursor.fetchall()
+
     def load_model(
         self, model_id
     ) -> tuple[int, SimpleModel | None, torch.optim.Optimizer | None, float, int]:
@@ -144,12 +149,38 @@ class DBHandler:
                 model.load_state_dict(
                     torch.load(io.BytesIO(model_data), weights_only=True)
                 )
+                for param in model.parameters():
+                    param.requires_grad = False
                 optimizer = torch.optim.Adam(model.parameters())
                 optimizer.load_state_dict(
                     torch.load(io.BytesIO(optimizer_data), weights_only=True)
                 )
                 return times_trained, model, optimizer, epsilon, episode
             return 0, None, None, 1, 0
+
+    def load_model_arhive(
+        self, id
+    ) -> tuple[SimpleModel | None, torch.optim.Optimizer | None]:
+        with self.conn:
+            cursor = self.conn.execute(
+                "SELECT model_data, optimizer_data FROM model_archives WHERE id = ?",
+                (id,),
+            )
+            row = cursor.fetchone()
+            if row:
+                model_data, optimizer_data = row
+                model = SimpleModel()
+                model.load_state_dict(
+                    torch.load(io.BytesIO(model_data), weights_only=True)
+                )
+                for param in model.parameters():
+                    param.requires_grad = False
+                optimizer = torch.optim.Adam(model.parameters())
+                optimizer.load_state_dict(
+                    torch.load(io.BytesIO(optimizer_data), weights_only=True)
+                )
+                return model, optimizer
+            return None, None
 
     def get_train_count(self, model_id):
         cursor = self.conn.execute(

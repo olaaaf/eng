@@ -150,7 +150,10 @@ class DQNTrainer:
             state = state.to(self.device).view(1, -1)
             # Use get_actions to match original implementation
             actions = self.online_model.forward(state)
-            return actions.squeeze().cpu().tolist()
+
+            return (
+                (torch.sigmoid(actions) > 0.7).float().squeeze().cpu().tolist()
+            )  # Element-wise comparison to produce 0s and 1s
 
     async def evaluate(self):
         """Advanced training episode with experience replay"""
@@ -167,14 +170,10 @@ class DQNTrainer:
             # Compute TD Error for Prioritized Experience Replay
             with torch.no_grad():
                 state_tensor = (
-                    torch.FloatTensor(state.to(torch.device("cpu")))
-                    .unsqueeze(0)
-                    .to(self.device)
+                    torch.FloatTensor(state.cpu()).unsqueeze(0).to(self.device)
                 )
                 next_state_tensor = (
-                    torch.FloatTensor(next_state.to(torch.device("cpu")))
-                    .unsqueeze(0)
-                    .to(self.device)
+                    torch.FloatTensor(next_state.cpu()).unsqueeze(0).to(self.device)
                 )
 
                 current_q = self.online_model(state_tensor)
@@ -215,6 +214,9 @@ class DQNTrainer:
         metrics = {
             "reward": episode_reward,
             "finished": (1.0 if self.runner.alive else 0.0),
+            "max_x": max(self.runner.step.x_pos),
+            "avg_speed": sum(self.runner.step.horizontal_speed)
+            / len(self.runner.step.horizontal_speed),
             "time": self.runner.step.time,
             "score": self.runner.step.score[-1],
             "epsilon": self.epsilon,
@@ -222,7 +224,7 @@ class DQNTrainer:
         self.run.log(metrics)
 
         # Periodic model saving
-        if self.episode_count % 100 == 0:
+        if self.episode_count % 30 == 0:
             self.save_model_checkpoint()
 
     def train(self):
@@ -269,7 +271,7 @@ class DQNTrainer:
 
         # Optimize
         self.optimizer.zero_grad()
-        weighted_loss.requires_grad = True
+        #weighted_loss.requires_grad = True
         weighted_loss.backward()
         torch.nn.utils.clip_grad_norm_(self.online_model.parameters(), max_norm=1.0)
         self.optimizer.step()
