@@ -1,47 +1,77 @@
 {
-    "8": {
-        "position_delta": 0.05,
-        "score_delta": 0.005,
-        "speed": 0.001,
-        "finish": 200,
-        "death": 40,
-        "time_penalty": 0.05,
-        "time_penalty_start": 5000,
-        "config": {
-            "gamma": 0.99,
-            "batch_size": 320,
-            "epsilon_end": 0.01,
-            "epsilon_decay": 0.995
-        }
-    },
-    "9": {
-        "position_delta": 0.05,
-        "score_delta": 0.005,
-        "speed": 3e-06,
-        "finish": 200,
-        "death": 40,
-        "time_penalty": 0.05,
-        "time_penalty_start": 5000,
-        "config": {
-            "gamma": 0.99,
-            "batch_size": 320,
-            "epsilon_end": 0.01,
-            "epsilon_decay": 0.995
-        }
-    },
-    "0": {
-        "position_delta": 0.05,
-        "score_delta": 0.005,
-        "speed": 3e-06,
-        "finish": 200,
-        "death": 40,
-        "time_penalty": 0.05,
-        "time_penalty_start": 5000,
-        "config": {
-            "gamma": 0.99,
-            "batch_size": 320,
-            "epsilon_end": 0.01,
-            "epsilon_decay": 0.995
-        }
+  "8": {
+    "position_delta": 0.05,
+    "score_delta": 0.005,
+    "speed": 0.001,
+    "finish": 200,
+    "death": 40,
+    "time_penalty": 0.05,
+    "time_penalty_start": 5000,
+    "config": {
+      "gamma": 0.99,
+      "batch_size": 320,
+      "epsilon_end": 0.01,
+      "epsilon_decay": 0.995
     }
+  },
+  "9": {
+    "position_delta": 0.05,
+    "score_delta": 0.005,
+    "speed": 3e-6,
+    "finish": 200,
+    "death": 40,
+    "time_penalty": 0.05,
+    "time_penalty_start": 5000,
+    "config": {
+      "gamma": 0.99,
+      "batch_size": 320,
+      "epsilon_end": 0.01,
+      "epsilon_decay": 0.995
+    }
+  },
+  "0": {
+    "position_delta": 0.05,
+    "score_delta": 0.005,
+    "speed": 3e-6,
+    "finish": 200,
+    "death": 40,
+    "time_penalty": 0.05,
+    "time_penalty_start": 5000,
+    "config": {
+      "gamma": 0.99,
+      "batch_size": 320,
+      "epsilon_end": 0.01,
+      "epsilon_decay": 0.995
+    }
+  },
+  "1": {
+    "position_delta": 0.05,
+    "score_delta": 0.005,
+    "speed": 3e-6,
+    "finish": 200,
+    "death": 40,
+    "time_penalty": 0.05,
+    "time_penalty_start": 5000,
+    "config": {
+      "gamma": 0.99,
+      "batch_size": 320,
+      "epsilon_end": 0.01,
+      "epsilon_decay": 0.995
+    }
+  },
+  "2": {
+    "position_delta": 0.05,
+    "score_delta": 0.005,
+    "speed": 3e-6,
+    "finish": 200,
+    "death": 40,
+    "time_penalty": 0.05,
+    "time_penalty_start": 5000,
+    "config": {
+      "gamma": 0.99,
+      "batch_size": 320,
+      "epsilon_end": 0.01,
+      "epsilon_decay": 0.995
+    }
+  }
 }
