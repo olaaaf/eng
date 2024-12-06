@@ -125,9 +125,9 @@ class DQNTrainer:
 
         # Model setup with target network
         self.online_model = model.to(self.device)
-        self.target_model = SimpleModel(
-            fc1_size=model.fc1_size, fc2_size=model.fc2_size, random_weights=True
-        ).to(self.device)
+        self.target_model = SimpleModel(reward_handler, random_weights=True).to(
+            self.device
+        )
         self.target_model.load_state_dict(self.online_model.state_dict())
 
         # Optimizer
@@ -164,6 +164,7 @@ class DQNTrainer:
         """Advanced training episode with experience replay"""
         episode_reward = 0
         state = self.runner.reset()
+        self.online_model.eval()
 
         while not self.runner.done:
             # Select and perform action
@@ -236,6 +237,7 @@ class DQNTrainer:
         """Batch training with Prioritized Experience Replay"""
         # Sample from replay buffer
         batch, indices, weights = self.replay_buffer.sample(self.batch_size)
+        self.online_model.train()
 
         if not batch:
             return

@@ -100,7 +100,7 @@ class Runner:
             if self.current_frame < Runner.max_frames:
                 self.frames[self.current_frame] = self.buffer
                 self.current_frame += 1
-        self.tensor = tensor(self.buffer, dtype=tf32).flatten()
+        self.tensor = tensor(self.buffer, dtype=tf32)
         self.tensor /= 255.0
 
     def __frame(self, controller: int):

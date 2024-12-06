@@ -5,6 +5,7 @@ import sqlite3
 
 import torch
 
+from train.helpers import Reward
 from train.model import SimpleModel
 
 
@@ -135,7 +136,7 @@ class DBHandler:
             return cursor.fetchall()
 
     def load_model(
-        self, model_id, fc1_size=None, fc2_size=None
+        self, model_id, reward_handler: Reward
     ) -> tuple[int, SimpleModel | None, torch.optim.Optimizer | None, float, int]:
         with self.conn:
             cursor = self.conn.execute(
@@ -146,10 +147,7 @@ class DBHandler:
             if row:
                 times_trained, model_data, optimizer_data, epsilon, episode = row
                 model: SimpleModel
-                if fc1_size and fc2_size:
-                    model = SimpleModel(fc1_size=fc1_size, fc2_size=fc2_size)
-                else:
-                    model = SimpleModel()
+                model = SimpleModel(reward_handler)
                 model.load_state_dict(
                     torch.load(io.BytesIO(model_data), weights_only=True)
                 )
