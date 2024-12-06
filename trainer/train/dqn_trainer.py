@@ -160,7 +160,7 @@ class DQNTrainer:
                 (actions).float().squeeze().cpu().tolist()
             )  # Element-wise comparison to produce 0s and 1s
 
-    async def evaluate(self):
+    def evaluate(self):
         """Advanced training episode with experience replay"""
         episode_reward = 0
         state = self.runner.reset()
@@ -210,7 +210,6 @@ class DQNTrainer:
             if self.total_steps % (self.target_update_frequency * 10) == 0:
                 self.update_target_network()
 
-            await asyncio.sleep(0)
 
         # Update epsilon
         self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
