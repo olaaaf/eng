@@ -292,7 +292,7 @@ class DBHandler:
             with self.conn:
                 self.conn.execute(
                     "INSERT INTO highscores (model_id, timestamp, x, score, time) VALUES (?, datetime('now'), ?, ?, ?)",
-                    (model_id, x, score, time)
+                    (model_id, x, score, time),
                 )
             return True
 
@@ -300,14 +300,18 @@ class DBHandler:
         record_beaten = False
 
         # Check if any metric is better
-        if (x > current_x or 
-            score > current_score or 
-            (time < current_time and time > 0)):  # Ignore 0 time
-            
+        if (
+            x > current_x or score > current_score or (time < current_time and time > 0)
+        ):  # Ignore 0 time
             with self.conn:
                 self.conn.execute(
                     "UPDATE highscores SET timestamp=datetime('now'), x=?, score=?, time=? WHERE model_id=?",
-                    (x, score, time, model_id)
+                    (
+                        max(x, current_x),
+                        max(score, current_score),
+                        min(time, current_time),
+                        model_id,
+                    ),
                 )
             record_beaten = True
 
