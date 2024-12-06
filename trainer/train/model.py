@@ -4,11 +4,14 @@ import random
 
 
 class SimpleModel(nn.Module):
-    def __init__(self, input_size=3840, random_weights=True):
+    def __init__(self, fc1_size=256, fc2_size=64, input_size=3840, random_weights=True):
         super(SimpleModel, self).__init__()
-        self.fc1 = nn.Linear(input_size, 256)
-        self.fc2 = nn.Linear(256, 64)
-        self.fc3 = nn.Linear(64, 6)  # 6 possible actions
+        self.fc1 = nn.Linear(input_size, fc1_size)
+        self.fc2 = nn.Linear(fc1_size, fc2_size)
+        self.fc3 = nn.Linear(fc2_size, 6)  # 6 possible actions
+
+        self.fc1_size = fc1_size
+        self.fc2_size = fc2_size
 
         if random_weights:
             nn.init.kaiming_normal_(self.fc1.weight)
