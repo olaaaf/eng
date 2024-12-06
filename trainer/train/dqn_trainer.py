@@ -108,7 +108,7 @@ class DQNTrainer:
                 "epsilon_end": self.epsilon_end,
                 "epsilon_decay": self.epsilon_decay,
                 "target_update_freq": self.target_update_frequency,
-                "learning_rate": learning_rate
+                "learning_rate": learning_rate,
             },
             resume="allow",
         )
@@ -131,7 +131,7 @@ class DQNTrainer:
         self.optimizer = (
             optimizer
             if optimizer
-            else optim.Adam(self.online_model.parameters(), lr=learning_rate)
+            else torch.optim.Adam(self.online_model.parameters(), lr=learning_rate)
         )
 
         # Other configurations
@@ -154,7 +154,7 @@ class DQNTrainer:
             actions = self.online_model.forward(state)
 
             return (
-                (torch.sigmoid(actions) > 0.7).float().squeeze().cpu().tolist()
+                (actions > 0).float().squeeze().cpu().tolist()
             )  # Element-wise comparison to produce 0s and 1s
 
     async def evaluate(self):
