@@ -25,14 +25,16 @@ def create_default(model_id):
         "speed": 0.001,
         "finish": 200,
         "death": 40,
-        "time_penalty": 0.05,
-        "time_penalty_start": 5000,
+        "time_penalty": 0.00,
+        "time_penalty_start": 9000,
         "config": {
             "gamma": 0.99,
             "batch_size": 320,
             "epsilon_end": 0.01,
             "epsilon_decay": 0.995,
             "learning_rate": 1e-4,
+            "fc1": 256,
+            "fc2": 64,
         },
     }
     logger.info(f"Adding new configuration for model_id: {model_id}")

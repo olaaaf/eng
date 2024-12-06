@@ -135,7 +135,7 @@ class DBHandler:
             return cursor.fetchall()
 
     def load_model(
-        self, model_id
+        self, model_id, fc1_size=None, fc2_size=None
     ) -> tuple[int, SimpleModel | None, torch.optim.Optimizer | None, float, int]:
         with self.conn:
             cursor = self.conn.execute(
@@ -145,7 +145,11 @@ class DBHandler:
             row = cursor.fetchone()
             if row:
                 times_trained, model_data, optimizer_data, epsilon, episode = row
-                model = SimpleModel()
+                model: SimpleModel
+                if fc1_size and fc2_size:
+                    model = SimpleModel(fc1_size=fc1_size, fc2_size=fc2_size)
+                else:
+                    model = SimpleModel()
                 model.load_state_dict(
                     torch.load(io.BytesIO(model_data), weights_only=True)
                 )

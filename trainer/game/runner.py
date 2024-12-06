@@ -110,17 +110,17 @@ class Runner:
     def __convert_input(self, controller: List[int]) -> int:
         return_controller = 0
 
-        if controller[0] > 0.5:
+        if controller[0] > 0 and controller[0] > controller[1]:
             return_controller |= NES_INPUT_RIGHT
-        if controller[1] > 0.5:
+        if controller[1] > 0 and controller[1] > controller[0]:
             return_controller |= NES_INPUT_LEFT
-        if controller[2] > 0.5:
+        if controller[2] > 0 and controller[2] > controller[3]:
             return_controller |= NES_INPUT_DOWN
-        if controller[3] > 0.5:
+        if controller[3] > 0 and controller[3] > controller[2]:
             return_controller |= NES_INPUT_UP
-        if controller[4] > 0.5:
+        if controller[4] > 0:
             return_controller |= NES_INPUT_A
-        if controller[5] > 0.5:
+        if controller[5] > 0:
             return_controller |= NES_INPUT_B
 
         return return_controller

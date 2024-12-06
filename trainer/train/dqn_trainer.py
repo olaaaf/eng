@@ -124,7 +124,9 @@ class DQNTrainer:
 
         # Model setup with target network
         self.online_model = model.to(self.device)
-        self.target_model = SimpleModel(random_weights=True).to(self.device)
+        self.target_model = SimpleModel(
+            fc1_size=model.fc1_size, fc2_size=model.fc2_size, random_weights=True
+        ).to(self.device)
         self.target_model.load_state_dict(self.online_model.state_dict())
 
         # Optimizer
