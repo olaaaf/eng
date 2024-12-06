@@ -6,9 +6,9 @@ import random
 class SimpleModel(nn.Module):
     def __init__(self, input_size=3840, random_weights=True):
         super(SimpleModel, self).__init__()
-        self.fc1 = nn.Linear(input_size, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, 6)  # 6 possible actions
+        self.fc1 = nn.Linear(input_size, 256)
+        self.fc2 = nn.Linear(256, 64)
+        self.fc3 = nn.Linear(64, 6)  # 6 possible actions
 
         if random_weights:
             nn.init.kaiming_normal_(self.fc1.weight)
