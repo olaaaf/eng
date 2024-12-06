@@ -79,13 +79,13 @@ class DQNTrainer:
         reward_handler: Reward,
         epsilon_start: float = 1.0,
         episode: int = 0,
-        learning_rate: float = 1e-4,
     ):
         # Hyperparameters
         self.batch_size = reward_handler.to_dict()["batch_size"]
         self.gamma = reward_handler.to_dict()["gamma"]
         self.epsilon_end = reward_handler.to_dict()["epsilon_end"]
         self.epsilon_decay = reward_handler.to_dict()["epsilon_decay"]
+        learning_rate = reward_handler.to_dict()["learning_rate"]
         self.runner = runner
 
         # Prioritized Replay and Target Network Parameters
@@ -146,7 +146,7 @@ class DQNTrainer:
     def select_action(self, state: torch.Tensor) -> List[float]:
         """Epsilon-greedy action selection"""
         if torch.rand(1) < self.epsilon:
-            return (torch.rand(6) > 0.5).float().tolist()
+            return (torch.rand(6)).float().tolist()
 
         with torch.no_grad():
             state = state.to(self.device).view(1, -1)
@@ -154,7 +154,7 @@ class DQNTrainer:
             actions = self.online_model.forward(state)
 
             return (
-                (actions > 0).float().squeeze().cpu().tolist()
+                (actions).float().squeeze().cpu().tolist()
             )  # Element-wise comparison to produce 0s and 1s
 
     async def evaluate(self):

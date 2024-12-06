@@ -108,15 +108,22 @@ class Runner:
         self.buffer = self.nes.step(frames=self.frame_skip)
 
     def __convert_input(self, controller: List[int]) -> int:
-        controller = [int(np.ceil(x)) for x in controller]
-        return (
-            controller[0] * NES_INPUT_RIGHT
-            | controller[1] * NES_INPUT_LEFT
-            | controller[2] * NES_INPUT_DOWN
-            | controller[3] * NES_INPUT_UP
-            | controller[4] * NES_INPUT_A
-            | controller[5] * NES_INPUT_B
-        )
+        return_controller = 0
+
+        if controller[0] > 0.5:
+            return_controller |= NES_INPUT_RIGHT
+        if controller[1] > 0.5:
+            return_controller |= NES_INPUT_LEFT
+        if controller[2] > 0.5:
+            return_controller |= NES_INPUT_DOWN
+        if controller[3] > 0.5:
+            return_controller |= NES_INPUT_UP
+        if controller[4] > 0.5:
+            return_controller |= NES_INPUT_A
+        if controller[5] > 0.5:
+            return_controller |= NES_INPUT_B
+
+        return return_controller
 
     def controller_to_text(self, controller):
         text = ""

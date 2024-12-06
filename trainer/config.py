@@ -32,6 +32,7 @@ def create_default(model_id):
             "batch_size": 320,
             "epsilon_end": 0.01,
             "epsilon_decay": 0.995,
+            "learning_rate": 1e-4,
         },
     }
     logger.info(f"Adding new configuration for model_id: {model_id}")
