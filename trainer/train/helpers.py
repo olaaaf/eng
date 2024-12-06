@@ -27,9 +27,15 @@ class Reward:
 
 class ConfigFileReward(Reward):
     def __init__(
-        self, _logger: Logger, model_id: int, config_path: str = "rewards.json"
+        self, _logger: Logger, model_id: int, config_path: str = "rewards.json", db=None
     ):
         super().__init__(_logger, model_id)
+        self.model_id = model_id
+        self.db = db
+        self.highscore_cache = None
+        self.rewarded_for_x_highscore = False
+        self.rewarded_for_score_highscore = False
+        self.rewarded_for_time_highscore = False
         self.settings: Dict
         self.sum = {}
         self.punished_for_death = False
@@ -43,6 +49,11 @@ class ConfigFileReward(Reward):
             super().logger.error(f"Config file {config_path} does not exist")
         except Exception as e:
             super().logger.error(f"Analyzing rewards configuration json: {e}")
+
+    def _get_cached_highscore(self):
+        if self.highscore_cache is None and self.db:
+            self.highscore_cache = self.db.get_highscore(self.model_id)
+        return self.highscore_cache
 
     def to_dict(self) -> Dict:
         return self.settings["config"]
@@ -108,6 +119,44 @@ class ConfigFileReward(Reward):
             rewards["rewards_for_time"] = -penalty
             reward -= penalty
 
+        # Highscore rewards
+        if self.db:
+            highscore = self._get_cached_highscore()
+            if highscore:
+                _, high_x, high_score, high_time = highscore
+
+                # X position highscore
+                if not self.rewarded_for_x_highscore and steps.x_pos[-1] > high_x:
+                    reward += self.settings.get("beat_x_highscore", 50)
+                    rewards["rewards_for_x_highscore"] = self.settings.get(
+                        "beat_x_highscore", 50
+                    )
+                    self.rewarded_for_x_highscore = True
+
+                # Score highscore
+                if (
+                    not self.rewarded_for_score_highscore
+                    and steps.score[-1] > high_score
+                ):
+                    reward += self.settings.get("beat_score_highscore", 10)
+                    rewards["rewards_for_score_highscore"] = self.settings.get(
+                        "beat_score_highscore", 100
+                    )
+                    self.rewarded_for_score_highscore = True
+
+                # Time highscore (only when completing level)
+                if (
+                    steps.level == 1
+                    and not self.rewarded_for_time_highscore
+                    and steps.time[-1] < high_time
+                    and steps.time[-1] > 0
+                ):
+                    reward += self.settings.get("beat_time_highscore", 150)
+                    rewards["rewards_for_time_highscore"] = self.settings.get(
+                        "beat_time_highscore", 150
+                    )
+                    self.rewarded_for_time_highscore = True
+
         for key, value in rewards.items():
             if key in self.sum:
                 self.sum[key] += value
@@ -118,6 +167,9 @@ class ConfigFileReward(Reward):
     def get_sum(self):
         s = self.sum
         self.rewarded_for_finish = False
+        self.rewarded_for_score_highscore = False
+        self.rewarded_for_time_highscore = False
+        self.rewarded_for_x_highscore = False
         self.punished_for_death = False
         self.sum = {}
         return s

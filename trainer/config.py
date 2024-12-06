@@ -27,6 +27,9 @@ def create_default(model_id):
         "death": 40,
         "time_penalty": 0.00,
         "time_penalty_start": 9000,
+        "beat_x_highscore": 50,
+        "beat_score_highscore": 20,
+        "beat_time_highscore": 150,
         "config": {
             "gamma": 0.99,
             "batch_size": 320,

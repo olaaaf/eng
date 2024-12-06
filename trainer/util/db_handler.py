@@ -2,6 +2,7 @@ import io
 import json
 import logging
 import sqlite3
+import math
 
 import torch
 
@@ -74,6 +75,19 @@ class DBHandler:
                     y_positions BLOB,
                     time INTEGER,
                     died BOOLEAN,
+                    FOREIGN KEY (model_id) REFERENCES models (id)
+                )
+            """
+            )
+            self.conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS highscores(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    model_id INTEGER,
+                    timestamp TEXT,
+                    x INTEGER,
+                    score INTEGER,
+                    time INTEGER,
                     FOREIGN KEY (model_id) REFERENCES models (id)
                 )
             """
@@ -266,3 +280,44 @@ class DBHandler:
                 (results_id,),
             )
             return cursor.fetchall()
+
+    def set_highscore(self, model_id, x, score, time):
+        """
+        Updates highscore if any metric is better than current record
+        Returns: bool indicating if any record was beaten
+        """
+        current = self.get_highscore(model_id)
+        if not current:
+            # No existing record, insert new one
+            with self.conn:
+                self.conn.execute(
+                    "INSERT INTO highscores (model_id, timestamp, x, score, time) VALUES (?, datetime('now'), ?, ?, ?)",
+                    (model_id, x, score, time)
+                )
+            return True
+
+        _, current_x, current_score, current_time = current
+        record_beaten = False
+
+        # Check if any metric is better
+        if (x > current_x or 
+            score > current_score or 
+            (time < current_time and time > 0)):  # Ignore 0 time
+            
+            with self.conn:
+                self.conn.execute(
+                    "UPDATE highscores SET timestamp=datetime('now'), x=?, score=?, time=? WHERE model_id=?",
+                    (x, score, time, model_id)
+                )
+            record_beaten = True
+
+        return record_beaten
+
+    def get_highscore(self, model_id) -> (int, int, int, str):
+        with self.conn:
+            cursor = self.conn.execute(
+                "SELECT timestamp, x, score, time FROM highscores WHERE model_id is ?",
+                (model_id,),
+            )
+            return cursor.fetchone()
+        return (0, 0, 1000000, "NO")
