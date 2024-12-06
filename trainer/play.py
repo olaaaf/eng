@@ -151,6 +151,9 @@ with WindowedNES("mario.nes") as nes:
 
         # Get the current frame buffer and preprocess it
         frame = nes.step()
+        frame = nes.step()
+        frame = nes.step()
+        frame = nes.step()
         frame, model_input_frame = preprocess_frame(frame)
 
         # Get the model's action
