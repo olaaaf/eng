@@ -4,11 +4,14 @@ import random
 
 
 class SimpleModel(nn.Module):
-    def __init__(self, input_size=3840, random_weights=True):
+    def __init__(self, fc1_size=256, fc2_size=64, input_size=3840, random_weights=True):
         super(SimpleModel, self).__init__()
-        self.fc1 = nn.Linear(input_size, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, 6)  # 6 possible actions
+        self.fc1 = nn.Linear(input_size, fc1_size)
+        self.fc2 = nn.Linear(fc1_size, fc2_size)
+        self.fc3 = nn.Linear(fc2_size, 6)  # 6 possible actions
+
+        self.fc1_size = fc1_size
+        self.fc2_size = fc2_size
 
         if random_weights:
             nn.init.kaiming_normal_(self.fc1.weight)
@@ -18,9 +21,7 @@ class SimpleModel(nn.Module):
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
-        return (
-            torch.sigmoid(self.fc3(x)) > 0.5
-        ).float()  # Element-wise comparison to produce 0s and 1s
+        return self.fc3(x)
 
     def save_model(self, path):
         torch.save(self.state_dict(), path)

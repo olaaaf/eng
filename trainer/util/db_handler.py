@@ -33,6 +33,17 @@ class DBHandler:
             )
             self.conn.execute(
                 """
+                CREATE TABLE IF NOT EXISTS model_archives (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    model_id INTEGER,
+                    model_data BLOB,
+                    optimizer_data BLOB,
+                    FOREIGN KEY (model_id) REFERENCES models (id)
+                )
+            """
+            )
+            self.conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT,
@@ -99,8 +110,32 @@ class DBHandler:
                 ),
             )
 
+    def save_model_archive(self, model_id, model, optimizer):
+        model_buffer = io.BytesIO()
+        torch.save(model.state_dict(), model_buffer)
+        optimizer_buffer = io.BytesIO()
+        torch.save(optimizer.state_dict(), optimizer_buffer)
+
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO model_archives (model_id, model_data, optimizer_data)
+                VALUES (?, ?, ?)
+            """,
+                (
+                    model_id,
+                    model_buffer.getvalue(),
+                    optimizer_buffer.getvalue(),
+                ),
+            )
+
+    def get_model_archives(self, model_id):
+        with self.conn:
+            cursor = self.conn.execute("SELECT id FROM model_archives")
+            return cursor.fetchall()
+
     def load_model(
-        self, model_id
+        self, model_id, fc1_size=None, fc2_size=None
     ) -> tuple[int, SimpleModel | None, torch.optim.Optimizer | None, float, int]:
         with self.conn:
             cursor = self.conn.execute(
@@ -110,12 +145,46 @@ class DBHandler:
             row = cursor.fetchone()
             if row:
                 times_trained, model_data, optimizer_data, epsilon, episode = row
-                model = SimpleModel()
-                model.load_state_dict(torch.load(io.BytesIO(model_data)))
+                model: SimpleModel
+                if fc1_size and fc2_size:
+                    model = SimpleModel(fc1_size=fc1_size, fc2_size=fc2_size)
+                else:
+                    model = SimpleModel()
+                model.load_state_dict(
+                    torch.load(io.BytesIO(model_data), weights_only=True)
+                )
+                for param in model.parameters():
+                    param.requires_grad = False
                 optimizer = torch.optim.Adam(model.parameters())
-                optimizer.load_state_dict(torch.load(io.BytesIO(optimizer_data)))
+                optimizer.load_state_dict(
+                    torch.load(io.BytesIO(optimizer_data), weights_only=True)
+                )
                 return times_trained, model, optimizer, epsilon, episode
             return 0, None, None, 1, 0
+
+    def load_model_arhive(
+        self, id
+    ) -> tuple[SimpleModel | None, torch.optim.Optimizer | None]:
+        with self.conn:
+            cursor = self.conn.execute(
+                "SELECT model_data, optimizer_data FROM model_archives WHERE id = ?",
+                (id,),
+            )
+            row = cursor.fetchone()
+            if row:
+                model_data, optimizer_data = row
+                model = SimpleModel()
+                model.load_state_dict(
+                    torch.load(io.BytesIO(model_data), weights_only=True)
+                )
+                for param in model.parameters():
+                    param.requires_grad = False
+                optimizer = torch.optim.Adam(model.parameters())
+                optimizer.load_state_dict(
+                    torch.load(io.BytesIO(optimizer_data), weights_only=True)
+                )
+                return model, optimizer
+            return None, None
 
     def get_train_count(self, model_id):
         cursor = self.conn.execute(

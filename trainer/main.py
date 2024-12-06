@@ -12,9 +12,11 @@ import wandb
 from game.runner import Runner
 from train.dqn_trainer import DQNTrainer
 from train.model import SimpleModel
+from train.helpers import ConfigFileReward
 from util.db_handler import DBHandler
 from util.logger import setup_logger
 from util.routes import app
+import config
 
 
 @dataclass
@@ -92,11 +94,26 @@ async def train_start(model_id: int):
     logger = setup_logger(db, "trainer_sever")
     epsilon = 1
     episode = 0
+
+    config.create_default(model_id)
+    reward_handler = ConfigFileReward(logger, model_id)
     # Load or create model
     try:
-        _, model, optimizer, epsilon, episode = db.load_model(model_id)
+        fc1_size = None
+        fc2_size = None
+        if "fc1" in reward_handler.to_dict() and "fc2" in reward_handler.to_dict():
+            fc1_size = reward_handler.to_dict()["fc1"]
+            fc2_size = reward_handler.to_dict()["fc2"]
+
+        _, model, optimizer, epsilon, episode = db.load_model(
+            model_id, fc1_size, fc2_size
+        )
         if not model:
-            model = SimpleModel()
+            model: SimpleModel
+            if fc1_size and fc2_size:
+                model = SimpleModel(fc1_size=fc1_size, fc2_size=fc2_size)
+            else:
+                model = SimpleModel()
             epsilon = 1
             episode = 0
             optimizer = torch.optim.Adam(model.parameters())
@@ -113,17 +130,18 @@ async def train_start(model_id: int):
 
     # Create training components
     runner = Runner(torch.device("mps" if torch.backends.mps.is_available() else "cpu"))
-    target_model = SimpleModel()  # Create target network
-    target_model.load_state_dict(model.state_dict())
+    # Create a config or load one for the reward system
+
     trainer = DQNTrainer(
         model_id,
         runner,
         model,
-        target_model,
-        optimizer,
+        None,
+        # optimizer,
         db,
         epsilon_start=epsilon,
         episode=episode,
+        reward_handler=reward_handler,
     )
     stop_flag = threading.Event()
 
