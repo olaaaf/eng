@@ -100,6 +100,7 @@ class DQNTrainer:
         self.run = wandb.init(
             project="mario_advanced_dqn",
             name=f"model_{model_id}",
+            id=f"model_{model_id}_{learning_rate}_{self.gamma}",
             config={
                 "model_id": model_id,
                 "batch_size": self.batch_size,
