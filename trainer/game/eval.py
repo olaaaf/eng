@@ -27,6 +27,10 @@ class Step:
         x_horizontal = nes[0x006D]
         x_on_screen = nes[0x0086]
         horizontal_speed = nes[0x0057]
+        # convert to signed integer
+        if horizontal_speed > 128:
+            horizontal_speed -= 256
+
         y_position_on_screen = nes[0x00CE]
         x_position = (x_horizontal << 8) | x_on_screen
         score_bcd = [

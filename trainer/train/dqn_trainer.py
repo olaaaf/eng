@@ -98,7 +98,7 @@ class DQNTrainer:
 
         # Wandb logging
         self.run = wandb.init(
-            project="mario_advanced_dqn",
+            project="mario_shpeed",
             name=f"model_{model_id}",
             id=f"model_{model_id}_{learning_rate}_{self.gamma}",
             config={
@@ -209,7 +209,6 @@ class DQNTrainer:
             # Periodic target network update
             if self.total_steps % (self.target_update_frequency * 10) == 0:
                 self.update_target_network()
-
 
         # Update epsilon
         self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)

@@ -59,7 +59,10 @@ if source == "1":
 
     # Load model from local DB
     model, _ = db_handler.load_model_arhive(archive_id)
-
+    if model is None:
+        print("failed model")
+        exit(1)
+    model.eval()
 elif source == "2":
     # Initialize wandb
     run = wandb.init()
@@ -78,12 +81,12 @@ elif source == "2":
     checkpoint = torch.load(f"{artifact_dir}/{filee}", map_location=torch.device("cpu"))
     model = SimpleModel(reward_handler)
     model.load_state_dict(checkpoint["model_state_dict"])
-
-if model is None:
-    print("Failed to load model")
-    exit(1)
-
-model.eval()
+    if model is None:
+        print("Failed to load model")
+        exit(1)
+    model.eval()
+elif source == "3":
+    model = None
 
 
 def convert_output_to_controller(controller: List[int]) -> int:
@@ -188,8 +191,9 @@ with WindowedNES("mario.nes") as nes:
         frame, model_input_frame = preprocess_frame(frame)
 
         # Get the model's action
-        action = select_action(frame)
-        # nes.controller = convert_output_to_controller(action)
+        if model:
+            action = select_action(frame)
+            nes.controller = convert_output_to_controller(action)
 
         # Set the controller input
         if lives != 2:
@@ -212,14 +216,11 @@ with WindowedNES("mario.nes") as nes:
             score = score * 100 + ((byte >> 4) * 10) + (byte & 0x0F)
 
         position_delta = current_x - last_x
+        if horizontal_speed > 127:
+            horizontal_speed = horizontal_speed - 256
         print(
             f"{controller_to_text(nes.controller)},pos: {x_position}, level: {level}, score: {score}, horizontal_speed: {horizontal_speed}, position_delta: {position_delta}"
         )
         last_x = current_x
-        # Get and log enemy states
-        enemy_states = get_enemy_states(nes)
-        print("\nEnemy States:")
-        for addr, state in enemy_states.items():
-            print(f"Address {addr}: {state}")
 
 cv2.destroyAllWindows()
