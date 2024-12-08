@@ -4,6 +4,9 @@ from typing import Dict
 import json
 from game.eval import Step
 
+MARIO_MAX_SHPEED = 40.0
+MARIO_MAX_DELTA_X = 10
+
 
 class Reward:
     logger: Logger
@@ -66,46 +69,29 @@ class ConfigFileReward(Reward):
         )
         score_delta = steps.score[-1] - steps.score[-2] if len(steps.score) > 1 else 0
 
-        if position_delta < 1e-9:
-            # penalty for moving left
-            reward -= position_delta * self.settings["position_delta"]
-        else:
-            # reward for moving right
-            reward += position_delta * self.settings["position_delta"]
+        position_reward = position_delta * self.settings.get(
+            "position_delta", 1.0 / MARIO_MAX_DELTA_X
+        )
+        score_reward = (score_delta / 100) * self.settings.get("score_delta", 0.1)
+        speed_reward = 0
+        level_reward = 0
+        death_reward = 0
+        time_over_reward = 0
+        stomp_reward = 0
 
-        rewards = {
-            "rewards_for_position": position_delta * self.settings["position_delta"],
-            "rewards_for_score_delta": 0,
-            "rewards_for_horizontal_speed": 0,
-            "rewards_for_level": 0,
-            "rewards_for_death": 0,
-            "rewards_for_time": 0,
-        }
-
-        # reward for gaining score
-        if score_delta > 0:
-            reward += score_delta * self.settings["score_delta"]
-            rewards["rewards_for_score_delta"] = (
-                score_delta * self.settings["score_delta"]
-            )
-
-        # reward for speed!!
-        if steps.horizontal_speed[-1] > -1e-9:
-            reward += steps.horizontal_speed[-1] * self.settings["speed"]
-            rewards["rewards_for_horizontal_speed"] = (
-                steps.horizontal_speed[-1] * self.settings["speed"]
+        if steps.horizontal_speed[-1] < 100 and position_reward > 1e-9:
+            speed_reward = steps.horizontal_speed[-1] * self.settings.get(
+                "speed", 1.0 / MARIO_MAX_SHPEED
             )
 
         if steps.level == 1 and not self.rewarded_for_finish:
-            reward += self.settings["finish"]
-            rewards["rewards_for_level"] = self.settings["finish"]
+            level_reward = self.settings.get("finish", 10)
             self.rewarded_for_finish = True
 
         # Large penalty for death
         if steps.died and not self.punished_for_death:
-            reward -= self.settings["death"]
+            death_reward = self.settings.get("death", -10)
             self.punished_for_death = True
-            rewards["rewards_for_death"] = -self.settings["death"]
 
         max_time = 9832
         time_penalty_scale = self.settings["time_penalty"]
@@ -116,11 +102,13 @@ class ConfigFileReward(Reward):
                 time_penalty_scale
                 * (time_over / (max_time - self.settings["time_penalty_start"])) ** 2
             )
-            rewards["rewards_for_time"] = -penalty
-            reward -= penalty
+            time_over_reward = -penalty
+
+        if steps.just_stomped:
+            stomp_reward = self.settings.get("stomp", 1)
 
         # Highscore rewards
-        if self.db:
+        if False:
             highscore = self._get_cached_highscore()
             if highscore:
                 _, high_x, high_score, high_time = highscore
@@ -157,11 +145,23 @@ class ConfigFileReward(Reward):
                     )
                     self.rewarded_for_time_highscore = True
 
+        rewards = {
+            "position_reward": position_reward,
+            "score_reward": score_reward,
+            "speed_reward": speed_reward,
+            "level_reward": level_reward,
+            "death_reward": death_reward,
+            "time_over_reward": time_over_reward,
+            "stomp_reward": stomp_reward,
+        }
+
         for key, value in rewards.items():
+            reward += value
             if key in self.sum:
                 self.sum[key] += value
             else:
                 self.sum[key] = value
+
         return reward
 
     def get_sum(self):

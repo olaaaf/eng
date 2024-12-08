@@ -20,13 +20,14 @@ def create_default(model_id):
         return
 
     default_config = {
-        "position_delta": 0.05,
-        "score_delta": 0.005,
+        "position_delta": 0.5,
+        "score_delta": 0.5,
         "speed": 0.001,
         "finish": 200,
         "death": 40,
         "time_penalty": 0.00,
         "time_penalty_start": 9000,
+        "stomp": 10,
         "beat_x_highscore": 50,
         "beat_score_highscore": 20,
         "beat_time_highscore": 150,
