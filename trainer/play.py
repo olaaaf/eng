@@ -69,7 +69,7 @@ elif source == "2":
     # Download the artifact
     version = input("input version: ")
     artifact = run.use_artifact(
-        f"olafercik/mario_advanced_dqn/advanced_model_checkpoint_{model_id}:v{version}",
+        f"olafercik/mario_shpeed/advanced_model_checkpoint_{model_id}:v{version}",
         type="model",
     )
     # artifact = run.use_artifact(
@@ -197,7 +197,7 @@ with WindowedNES("mario.nes") as nes:
 
         # Set the controller input
         if lives != 2:
-            nes.should_close = True
+            break
 
         sleep(1 / 60)  # 60fps
 

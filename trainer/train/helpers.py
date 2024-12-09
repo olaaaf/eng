@@ -43,6 +43,7 @@ class ConfigFileReward(Reward):
         self.sum = {}
         self.punished_for_death = False
         self.rewarded_for_finish = False
+        self.run_max_x = 40
 
         try:
             with open(config_path) as file:
@@ -64,18 +65,13 @@ class ConfigFileReward(Reward):
     def get_reward(self, steps: Step) -> float:
         reward = 0
 
-        position_delta = (
-            steps.x_pos[-1] - steps.x_pos[-2] if len(steps.x_pos) > 1 else 0
-        )
         score_delta = steps.score[-1] - steps.score[-2] if len(steps.score) > 1 else 0
 
-        position_reward = position_delta * self.settings.get(
-            "position_delta", 1.0 / MARIO_MAX_DELTA_X
-        )
         score_reward = (score_delta / 100) * self.settings.get("score_delta", 0.1)
         speed_reward = steps.horizontal_speed[-1] * self.settings.get(
             "speed", 1.0 / MARIO_MAX_SHPEED
         )
+        position_reward = 0
         level_reward = 0
         death_reward = 0
         time_over_reward = 0
@@ -103,6 +99,13 @@ class ConfigFileReward(Reward):
 
         if steps.just_stomped:
             stomp_reward = self.settings.get("stomp", 1)
+
+        if steps.x_pos[-1] > self.run_max_x:
+            self.run_max_x = steps.x_pos[-1]
+            position_reward_function = (1.0 / 3220.0 * steps.x_pos[-1]) - 2.0 / 161.0
+            position_reward = (
+                self.settings.get("position_reward", 1) * position_reward_function
+            )
 
         # Highscore rewards
         if False:
@@ -168,5 +171,6 @@ class ConfigFileReward(Reward):
         self.rewarded_for_time_highscore = False
         self.rewarded_for_x_highscore = False
         self.punished_for_death = False
+        self.run_max_x = 40
         self.sum = {}
         return s

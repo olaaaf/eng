@@ -8,7 +8,7 @@ import os
 def load_model_version(model_id, version):
     run = wandb.init(project="mario_advanced_dqn", entity="olafercik")
     artifact = run.use_artifact(
-        f"olafercik/mario_advanced_dqn/advanced_model_checkpoint_{model_id}:v{version}",
+        f"olafercik/mario_shpeed/advanced_model_checkpoint_{model_id}:v{version}",
         type="model",
     )
     artifact_dir = artifact.download()
