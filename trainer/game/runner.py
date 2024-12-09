@@ -57,35 +57,8 @@ class Runner:
         return self.tensor.to(self.device)
 
     def get_metrics(self):
-        lives = self.nes[0x75A]
-        x_horizontal = self.nes[0x006D]
-        x_on_screen = self.nes[0x0086]
-        horizontal_speed = self.nes[0x0057]
-        y_position_on_screen = self.nes[0x00CE]
-        x_position = (x_horizontal << 8) | x_on_screen
-        score_bcd = [
-            self.nes[0x07DD],  # 1000000 and 100000 place
-            self.nes[0x07DE],  # 10000 and 1000 place
-            self.nes[0x07DF],  # 100 and 10 place
-            self.nes[0x07E0],  # 1 place (if applicable)
-            self.nes[0x07E1],  # 1 place (if applicable)
-            self.nes[0x07E2],  # 1 place (if applicable)
-        ]
-        level = self.nes[0x0760]
-        # Convert BCD to integer score
-        score = 0
-        for byte in score_bcd:
-            score = score * 100 + ((byte >> 4) * 10) + (byte & 0x0F)
+        lives, level = self.step.step(self.nes, self.frame_skip)
 
-        self.step.step(
-            x_position,
-            y_position_on_screen,
-            horizontal_speed,
-            self.frame_skip,
-            lives,
-            score,
-            level,
-        )
         if lives != 2:
             self.alive = False
             self.done = True
@@ -100,7 +73,7 @@ class Runner:
             if self.current_frame < Runner.max_frames:
                 self.frames[self.current_frame] = self.buffer
                 self.current_frame += 1
-        self.tensor = tensor(self.buffer, dtype=tf32).flatten()
+        self.tensor = tensor(self.buffer, dtype=tf32)
         self.tensor /= 255.0
 
     def __frame(self, controller: int):

@@ -2,9 +2,11 @@ import io
 import json
 import logging
 import sqlite3
+import math
 
 import torch
 
+from train.helpers import Reward
 from train.model import SimpleModel
 
 
@@ -77,6 +79,19 @@ class DBHandler:
                 )
             """
             )
+            self.conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS highscores(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    model_id INTEGER,
+                    timestamp TEXT,
+                    x INTEGER,
+                    score INTEGER,
+                    time INTEGER,
+                    FOREIGN KEY (model_id) REFERENCES models (id)
+                )
+            """
+            )
 
     def increase_train_count(self, model_id):
         with self.conn:
@@ -135,7 +150,7 @@ class DBHandler:
             return cursor.fetchall()
 
     def load_model(
-        self, model_id, fc1_size=None, fc2_size=None
+        self, model_id, reward_handler: Reward
     ) -> tuple[int, SimpleModel | None, torch.optim.Optimizer | None, float, int]:
         with self.conn:
             cursor = self.conn.execute(
@@ -146,10 +161,7 @@ class DBHandler:
             if row:
                 times_trained, model_data, optimizer_data, epsilon, episode = row
                 model: SimpleModel
-                if fc1_size and fc2_size:
-                    model = SimpleModel(fc1_size=fc1_size, fc2_size=fc2_size)
-                else:
-                    model = SimpleModel()
+                model = SimpleModel(reward_handler)
                 model.load_state_dict(
                     torch.load(io.BytesIO(model_data), weights_only=True)
                 )
@@ -268,3 +280,48 @@ class DBHandler:
                 (results_id,),
             )
             return cursor.fetchall()
+
+    def set_highscore(self, model_id, x, score, time):
+        """
+        Updates highscore if any metric is better than current record
+        Returns: bool indicating if any record was beaten
+        """
+        current = self.get_highscore(model_id)
+        if not current:
+            # No existing record, insert new one
+            with self.conn:
+                self.conn.execute(
+                    "INSERT INTO highscores (model_id, timestamp, x, score, time) VALUES (?, datetime('now'), ?, ?, ?)",
+                    (model_id, x, score, time),
+                )
+            return True
+
+        _, current_x, current_score, current_time = current
+        record_beaten = False
+
+        # Check if any metric is better
+        if (
+            x > current_x or score > current_score or (time < current_time and time > 0)
+        ):  # Ignore 0 time
+            with self.conn:
+                self.conn.execute(
+                    "UPDATE highscores SET timestamp=datetime('now'), x=?, score=?, time=? WHERE model_id=?",
+                    (
+                        max(x, current_x),
+                        max(score, current_score),
+                        min(time, current_time),
+                        model_id,
+                    ),
+                )
+            record_beaten = True
+
+        return record_beaten
+
+    def get_highscore(self, model_id) -> (int, int, int, str):
+        with self.conn:
+            cursor = self.conn.execute(
+                "SELECT timestamp, x, score, time FROM highscores WHERE model_id is ?",
+                (model_id,),
+            )
+            return cursor.fetchone()
+        return (0, 0, 1000000, "NO")

@@ -98,7 +98,7 @@ class DQNTrainer:
 
         # Wandb logging
         self.run = wandb.init(
-            project="mario_advanced_dqn",
+            project="mario_shpeed",
             name=f"model_{model_id}",
             id=f"model_{model_id}_{learning_rate}_{self.gamma}",
             config={
@@ -125,9 +125,9 @@ class DQNTrainer:
 
         # Model setup with target network
         self.online_model = model.to(self.device)
-        self.target_model = SimpleModel(
-            fc1_size=model.fc1_size, fc2_size=model.fc2_size, random_weights=True
-        ).to(self.device)
+        self.target_model = SimpleModel(reward_handler, random_weights=True).to(
+            self.device
+        )
         self.target_model.load_state_dict(self.online_model.state_dict())
 
         # Optimizer
@@ -160,10 +160,11 @@ class DQNTrainer:
                 (actions).float().squeeze().cpu().tolist()
             )  # Element-wise comparison to produce 0s and 1s
 
-    async def evaluate(self):
+    def evaluate(self):
         """Advanced training episode with experience replay"""
         episode_reward = 0
         state = self.runner.reset()
+        self.online_model.eval()
 
         while not self.runner.done:
             # Select and perform action
@@ -209,8 +210,6 @@ class DQNTrainer:
             if self.total_steps % (self.target_update_frequency * 10) == 0:
                 self.update_target_network()
 
-            await asyncio.sleep(0)
-
         # Update epsilon
         self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
         self.episode_count += 1
@@ -236,6 +235,7 @@ class DQNTrainer:
         """Batch training with Prioritized Experience Replay"""
         # Sample from replay buffer
         batch, indices, weights = self.replay_buffer.sample(self.batch_size)
+        self.online_model.train()
 
         if not batch:
             return

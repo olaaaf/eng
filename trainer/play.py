@@ -19,14 +19,32 @@ from typing import List
 from train.model import SimpleModel
 import cv2
 import matplotlib.pyplot as plt
+from train.helpers import ConfigFileReward
+from util.logger import setup_logger
 
 plt.ion()  # Turn on interactive mode
 
+# Add at top with other constants
+ENEMY_STATES = {
+    0x00: "exists",
+    0x01: "falling/bullet_bill",
+    0x04: "stomped",
+    0x20: "bullet/cheep/hammer_stomped",
+    0x22: "fire_star_killed",
+    0x23: "bowser_killed",
+    0xC4: "koopa_falling",
+    0x84: "koopa_moving",
+    0xFF: "killed",
+}
+
 # Initialize database handler
 db_handler = DBHandler()
+logger = setup_logger(db_handler, "player")
 
 model_id = int(input("Enter the model ID to use: "))
 source = input("Load from (1) Local DB or (2) Wandb? Enter 1 or 2: ")
+
+reward_handler = ConfigFileReward(logger, model_id, "rewards.json")
 
 model = None
 if source == "1":
@@ -41,14 +59,17 @@ if source == "1":
 
     # Load model from local DB
     model, _ = db_handler.load_model_arhive(archive_id)
-
+    if model is None:
+        print("failed model")
+        exit(1)
+    model.eval()
 elif source == "2":
     # Initialize wandb
     run = wandb.init()
     # Download the artifact
     version = input("input version: ")
     artifact = run.use_artifact(
-        f"olafercik/mario_advanced_dqn/advanced_model_checkpoint_{model_id}:v{version}",
+        f"olafercik/mario_shpeed/advanced_model_checkpoint_{model_id}:v{version}",
         type="model",
     )
     # artifact = run.use_artifact(
@@ -58,14 +79,14 @@ elif source == "2":
     # Load the model
     filee = os.listdir(artifact_dir)[0]
     checkpoint = torch.load(f"{artifact_dir}/{filee}", map_location=torch.device("cpu"))
-    model = SimpleModel()
+    model = SimpleModel(reward_handler)
     model.load_state_dict(checkpoint["model_state_dict"])
-
-if model is None:
-    print("Failed to load model")
-    exit(1)
-
-model.eval()
+    if model is None:
+        print("Failed to load model")
+        exit(1)
+    model.eval()
+elif source == "3":
+    model = None
 
 
 def convert_output_to_controller(controller: List[int]) -> int:
@@ -133,12 +154,24 @@ def controller_to_text(controller):
     return text
 
 
+def get_enemy_states(nes) -> dict:
+    """Read enemy states from memory range 0x001E-0x0023"""
+    states = {}
+    for addr in range(0x001E, 0x0024):
+        state = nes[addr]
+        state_name = ENEMY_STATES.get(state, f"unknown_{hex(state)}")
+        states[hex(addr)] = state_name
+    return states
+
+
 with WindowedNES("mario.nes") as nes:
     nes.step(frames=40)
     nes.controller = NES_INPUT_START
     nes.step(frames=85)
     nes.controller = 0
     nes.step(frames=85)
+    last_x = 40
+    current_x = 40
 
     while not nes.should_close:
         lives = nes[0x75A]
@@ -148,6 +181,7 @@ with WindowedNES("mario.nes") as nes:
         horizontal_speed = nes[0x0057]
         y_position_on_screen = nes[0x00CE]
         x_position = (x_horizontal << 8) | x_on_screen
+        current_x = x_position
 
         # Get the current frame buffer and preprocess it
         frame = nes.step()
@@ -157,12 +191,13 @@ with WindowedNES("mario.nes") as nes:
         frame, model_input_frame = preprocess_frame(frame)
 
         # Get the model's action
-        action = select_action(frame)
-        nes.controller = convert_output_to_controller(action)
+        if model:
+            action = select_action(frame)
+            nes.controller = convert_output_to_controller(action)
 
         # Set the controller input
         if lives != 2:
-            nes.should_close = True
+            break
 
         sleep(1 / 60)  # 60fps
 
@@ -180,8 +215,12 @@ with WindowedNES("mario.nes") as nes:
         for byte in score_bcd:
             score = score * 100 + ((byte >> 4) * 10) + (byte & 0x0F)
 
+        position_delta = current_x - last_x
+        if horizontal_speed > 127:
+            horizontal_speed = horizontal_speed - 256
         print(
-            f"{controller_to_text(nes.controller)},pos: {x_position}, level: {level}, score: {score}, horizontal_speed: {horizontal_speed}"
+            f"{controller_to_text(nes.controller)},pos: {x_position}, level: {level}, score: {score}, horizontal_speed: {horizontal_speed}, position_delta: {position_delta}"
         )
+        last_x = current_x
 
 cv2.destroyAllWindows()

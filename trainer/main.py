@@ -1,11 +1,15 @@
+import argparse
 import asyncio
 import contextlib
 import logging
+import signal
+import sys
 import threading
 from dataclasses import dataclass
 from typing import Dict, Optional
 
 import torch
+import uvicorn
 from fastapi import FastAPI, HTTPException
 
 import wandb
@@ -99,21 +103,9 @@ async def train_start(model_id: int):
     reward_handler = ConfigFileReward(logger, model_id)
     # Load or create model
     try:
-        fc1_size = None
-        fc2_size = None
-        if "fc1" in reward_handler.to_dict() and "fc2" in reward_handler.to_dict():
-            fc1_size = reward_handler.to_dict()["fc1"]
-            fc2_size = reward_handler.to_dict()["fc2"]
-
-        _, model, optimizer, epsilon, episode = db.load_model(
-            model_id, fc1_size, fc2_size
-        )
+        _, model, optimizer, epsilon, episode = db.load_model(model_id, reward_handler)
         if not model:
-            model: SimpleModel
-            if fc1_size and fc2_size:
-                model = SimpleModel(fc1_size=fc1_size, fc2_size=fc2_size)
-            else:
-                model = SimpleModel()
+            model = SimpleModel(reward_handler)
             epsilon = 1
             episode = 0
             optimizer = torch.optim.Adam(model.parameters())
@@ -123,10 +115,6 @@ async def train_start(model_id: int):
         raise HTTPException(
             status_code=500, detail=f"Failed to load or create model: {str(e)}"
         )
-
-    model.train()
-    for param in model.parameters():
-        param.requires_grad = True
 
     # Create training components
     runner = Runner(torch.device("mps" if torch.backends.mps.is_available() else "cpu"))
@@ -217,7 +205,83 @@ async def shutdown_event():
     db.close()
 
 
-if __name__ == "__main__":
-    import uvicorn
+def signal_handler(logger):
+    logger.info("\nShutting down gracefully...")
+    sys.exit(0)
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+def cli_main(model_id: int):
+    """Terminal mode training loop"""
+    db = DBHandler()
+    logger = setup_logger(db, "cli")
+    db.logger = logger
+    episode = 0
+
+    def bind_signal(sig, frame):
+        signal_handler(logger)
+
+    signal.signal(signal.SIGINT, bind_signal)
+    config.create_default(model_id)
+    reward_handler = ConfigFileReward(logger, model_id)
+
+    try:
+        _, model, optimizer, epsilon, episode = db.load_model(model_id, reward_handler)
+        if not model:
+            model = SimpleModel(reward_handler)
+            epsilon = 1
+            episode = 0
+            optimizer = torch.optim.Adam(model.parameters())
+            db.save_model(1, model_id, model, optimizer, episode)
+    except Exception as e:
+        logger.error(f"Error loading model {model_id}: {str(e)}")
+        sys.exit(1)
+
+    runner = Runner(torch.device("mps" if torch.backends.mps.is_available() else "cpu"))
+    trainer = DQNTrainer(
+        model_id,
+        runner,
+        model,
+        optimizer,
+        db,
+        reward_handler,
+        epsilon_start=epsilon,
+        episode=episode,
+    )
+
+    logger.info(f"Starting training for model {model_id}")
+    try:
+        while True:
+            trainer.evaluate()
+            if episode % 100 == 0:
+                trainer.save_model_checkpoint()
+            episode += 1
+    except KeyboardInterrupt:
+        trainer.cleanup()
+        logger.info("Training stopped by user")
+    except Exception as e:
+        logger.error(f"Training error: {str(e)}")
+        trainer.cleanup()
+        sys.exit(1)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="DQN Mario AI Trainer")
+    parser.add_argument(
+        "-m", "--model", type=int, required=True, help="Model ID to train"
+    )
+    parser.add_argument(
+        "-t", "--terminal", action="store_true", help="Run in terminal mode"
+    )
+
+    args = parser.parse_args()
+
+    if args.terminal:
+        # Setup signal handler for ctrl+c in terminal mode
+        cli_main(args.model)
+    else:
+        # Web mode - use existing FastAPI app
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+if __name__ == "__main__":
+    main()
