@@ -1,125 +1,235 @@
 \chapter{Podstawy teoretyczne}
 
-\section{Uczenie maszynowe i reinforcement learning}
+\section{Uczenie maszynowe}
 
-Uczenie maszynowe (ang. Machine Learning, ML) to dziedzina sztucznej inteligencji, która pozwala wybranemu algorytmowi na automatyczne uczenie się wzorców z danych bez potrzeby jawnego określania parametrów wewnętrznych. Przykładem uczenia maszynowego jest dostosowanie parametrów funkcji liniowej do zbioru danych:
+Uczenie maszynowe (ang. Machine Learning) to dziedzina sztucznej inteligencji, która koncentruje się na opracowywaniu algorytmów zdolnych do automatycznego uczenia się i poprawiania wydajności na podstawie danych. W tradycyjnym programowaniu inżynierowie jawnie definiują reguły, według których system działa, podczas gdy w uczeniu maszynowym algorytm uczy się tych reguł na podstawie wzorców i statystyk w danych.
 
-\[
-f(x) = ax + b,
-\]
-
-gdzie \(a\) (nachylenie) i \(b\) (przecięcie z osią Y) są parametrami, które należy dostosować tak, aby funkcja najlepiej przybliżała dane wejściowe. Proces ten polega na minimalizacji różnicy między wartościami przewidywanymi przez model a rzeczywistymi wartościami w zbiorze danych. Problemy poruszane przez uczenie maszynowe zwykle są związane z bardzo dużą liczbą parametrów.
-
-\subsection{Podstawowe pojęcia}
-
-Uczenie ze wzmocnieniem opiera się na kluczowych pojęciach: 
-\begin{itemize}
-    \item \textbf{Agent} – model; podmiot podejmujący decyzje na podstawie obserwowanego stanu środowiska.
-    \item \textbf{Środowisko (ang. Environment)} – otoczenie, w którym agent działa i z którym wchodzi w interakcje.
-    \item \textbf{Stan (ang. State)} – opis bieżącej sytuacji środowiska, obserwowany przez agenta.
-    \item \textbf{Akcja (ang. Action)} – decyzja podejmowana przez agenta, wpływająca na środowisko.
-    \item \textbf{Nagroda (ang. Reward)} – liczba, która ocenia efektywność podjętej akcji w danym stanie.
-\end{itemize}
-
-Uczenie maszynowe można podzielić na trzy główne kategorie:
-
-\begin{itemize}
-    \item \textbf{Uczenie nadzorowane (ang. Supervised Learning)} – model jest trenowany na zestawie danych, które zawierają zarówno wejścia (ang. inputs), jak i odpowiadające im wyjścia (ang. outputs). Celem jest nauczenie modelu przewidywania wyjścia dla nowych, nieznanych danych na podstawie znanych znanych par wejścia-wyjścia (np. opis obrazka).
-
-    \item \textbf{Uczenie nienadzorowane (ang. Unsupervised Learning)} – dane treningowe zawierają jedynie wejścia, bez przypisanych wyjść. Algorytm stara się odkrywać ukryte wzorce lub grupy w danych.
-
-    \item \textbf{Uczenie ze wzmocnieniem (ang. Reinforcement Learning)} – agent uczy się przez interakcję ze środowiskiem, podejmując akcje, które maksymalizują otrzymywaną nagrodę. W odróżnieniu od uczenia nadzorowanego, nie ma bezpośrednio dostępnych par wejście-wyjście – agent musi odkryć najlepszą strategię działania na podstawie prób i błędów.
-\end{itemize}
-
-\subsection{Algorytm Double Q-Learning}
-
-Double Q-Learning jest ulepszeniem klasycznego algorytmu Q-Learning, który pozwala agentowi uczyć się optymalnej strategii (ang. policy) w środowiskach opartych na nagrodach. Kluczowym problemem tradycyjnego Q-Learningu jest ryzyko przeszacowywania wartości \( Q(s, a) \), co może prowadzić do błędnych decyzji w złożonych środowiskach. Double Q-Learning minimalizuje to ryzyko, wykorzystując dwie oddzielne tablice wartości \( Q_1 \) i \( Q_2 \), które są aktualizowane naprzemiennie.
-
-\paragraph{Podstawy algorytmu Q-Learning:}
-W tradycyjnym Q-Learningu agent aktualizuje wartość \( Q(s, a) \) według równania Bellmana:
+Uczenie maszynowe można traktować jako proces rozwiązywania problemów, w którym algorytm musi znaleźć funkcję \( f \), która przekształca dane wejściowe \( x \) na oczekiwane wyniki \( y \):
 
 \[
-Q(s, a) \leftarrow Q(s, a) + \alpha \left( r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right),
+	f(x) = y.
 \]
 
-gdzie:
-\begin{itemize}
-    \item \( Q(s, a) \) – aktualna wartość dla stanu \( s \) i akcji \( a \),
-    \item \( \alpha \) – współczynnik uczenia, który kontroluje szybkość aktualizacji,
-    \item \( r \) – nagroda za podjęcie akcji \( a \),
-    \item \( \gamma \) – współczynnik dyskontowy, określający znaczenie przyszłych nagród,
-    \item \( \max_{a'} Q(s', a') \) – maksymalna wartość Q dla następnego stanu \( s' \) przy dowolnej akcji \( a' \).
-\end{itemize}
+Proces uczenia polega na dostosowywaniu parametrów tej funkcji, takich jak w przypadku funkcji liniowej:
 
-\paragraph{Ulepszenie w Double Q-Learning:}
-Double Q-Learning dzieli wartości \( Q \) na dwie tablice: \( Q_1 \) i \( Q_2 \). Przy każdej aktualizacji wybierana jest losowo jedna z tych tablic do aktualizacji, podczas gdy druga tablica jest wykorzystywana do wyboru optymalnej akcji. Aktualizacja wartości \( Q \) przebiega według następującego schematu:
-
-1. Jeśli wybrano tablicę \( Q_1 \):
 \[
-Q_1(s, a) \leftarrow Q_1(s, a) + \alpha \left( r + \gamma Q_2(s', \arg\max_{a'} Q_1(s', a')) - Q_1(s, a) \right),
+	f(x) = ax + b,
 \]
 
-2. Jeśli wybrano tablicę \( Q_2 \):
+gdzie \( a \) i \( b \) są parametrami, które algorytm dostosowuje w trakcie uczenia, aby najlepiej przybliżać dane z rzeczywistego świata.
+
+Charakteryzacja problemów w uczeniu maszynowym obejmuje trzy główne etapy:
+\begin{itemize}
+	\item \textbf{Reprezentacja danych:} Jak dane są modelowane i prezentowane dla algorytmu (np. jako macierz, graf, obrazy).
+	\item \textbf{Uczenie:} Proces znajdowania najlepszych parametrów modelu dla zadania na podstawie danych treningowych.
+	\item \textbf{Ewaluacja:} Jak mierzy się jakość modelu na zbiorze testowym, np. poprzez dokładność, stratę, czy miary specyficzne dla problemu.
+\end{itemize}
+
+\subsection{Podział uczenia maszynowego}
+
+Uczenie maszynowe dzieli się na trzy główne kategorie, zależnie od dostępności danych i celu uczenia:
+
+\subsubsection{Uczenie nadzorowane (ang. Supervised Learning)}
+W uczeniu nadzorowanym algorytm uczy się na zestawie danych, w którym każde wejście \( x \) ma przypisane wyjście \( y \). Celem jest zbudowanie modelu, który potrafi przewidzieć \( y \) dla nowych danych \( x \). Typowe problemy:
+\begin{itemize}
+	\item Klasyfikacja (np. rozpoznawanie obrazów),
+	\item Regresja (np. przewidywanie cen mieszkań).
+\end{itemize}
+Proces ten wymaga dużej ilości danych oznaczonych i jest stosunkowo prosty do wdrożenia.
+
+\subsubsection{Uczenie nienadzorowane (ang. Unsupervised Learning)}
+W uczeniu nienadzorowanym dane treningowe nie zawierają przypisanych wyjść. Algorytm analizuje strukturę danych i szuka ukrytych wzorców. Przykładowe zastosowania:
+\begin{itemize}
+	\item Klasteryzacja (np. segmentacja klientów),
+	\item Redukcja wymiarów (np. PCA – analiza głównych składowych).
+\end{itemize}
+
+\subsubsection{Uczenie ze wzmocnieniem (ang. Reinforcement Learning)}
+Uczenie ze wzmocnieniem polega na interakcji agenta ze środowiskiem. Agent podejmuje akcje i otrzymuje nagrody, które wskazują, czy jego działanie było korzystne. Celem jest maksymalizacja długoterminowej sumy nagród. Problemy RL są bardziej złożone, ponieważ nie zawsze istnieje bezpośredni związek między akcją a natychmiastową nagrodą.
+
+---
+
+\section{Podstawowe pojęcia}
+
+Uczenie maszynowe opiera się na kilku kluczowych pojęciach, które są fundamentem każdego modelu.
+
+\subsection{Model}
+
+Model w uczeniu maszynowym jest matematyczną strukturą przekształcającą dane wejściowe \(x\) na dane wyjściowe \(y\). Proces ten jest realizowany przez zestaw parametrów, które są dostosowywane w procesie uczenia w celu minimalizacji błędu predykcji.
+
+\subsubsection{Sieć neuronowa}
+
+Sieć neuronowa jest rodzajem modelu uczenia maszynowego inspirowanym strukturą biologicznego mózgu. Składa się z neuronów ułożonych w warstwy, które przekształcają dane wejściowe na dane wyjściowe poprzez zestaw połączonych operacji matematycznych.
+
+\paragraph{Struktura sieci:}
+Sieć neuronowa składa się z:
+\begin{itemize}
+	\item \textbf{Warstwy wejściowej:} Przyjmuje surowe dane wejściowe.
+	\item \textbf{Warstw ukrytych:} Przetwarzają dane za pomocą neuronów.
+	\item \textbf{Warstwy wyjściowej:} Produkuje końcowy wynik.
+\end{itemize}
+
+\paragraph{Typy warstw:}
+Różne typy warstw stosuje się w zależności od zadania. Poniżej znajduje się tabela przedstawiająca popularne typy warstw:
+
+\begin{table}[h!]
+	\centering
+	\caption{Rodzaje warstw w sieciach neuronowych}
+	\label{tab:layer_types}
+	\begin{tabular}{|c|l|}
+		\hline
+		\textbf{Typ warstwy}                & \textbf{Opis}                                                        \\ \hline
+		Gęsta (Fully Connected)             & Każdy neuron jest połączony z każdym neuronem kolejnej warstwy.      \\ \hline
+		Konwolucyjna (Convolutional Layer)  & Ekstrakcja cech lokalnych, stosowana w przetwarzaniu obrazów.        \\ \hline
+		Rekurencyjna (Recurrent Layer)      & Analiza danych sekwencyjnych, np. tekstu lub szeregów czasowych.     \\ \hline
+		Normalizująca (Batch Normalization) & Stabilizacja procesu uczenia poprzez normalizację wejść.             \\ \hline
+		Dropout                             & Redukcja nadmiernego dopasowania przez losowe "wyłączanie" neuronów. \\ \hline
+	\end{tabular}
+\end{table}
+
+\subsubsection{Neuron}
+
+Neuron jest podstawową jednostką w sieci neuronowej. Otrzymuje dane wejściowe \(x\), które są przekształcane za pomocą wag \(w\) i biasu \(b\) do wartości \(z\):
+
 \[
-Q_2(s, a) \leftarrow Q_2(s, a) + \alpha \left( r + \gamma Q_1(s', \arg\max_{a'} Q_2(s', a')) - Q_2(s, a) \right).
+	z = w \cdot x + b.
 \]
 
-Wykorzystanie dwóch tablic pozwala na bardziej wiarygodne szacowanie wartości akcji, ponieważ wybór optymalnej akcji jest niezależny od tablicy, która aktualizuje wartości.
+Wartość \(z\) jest następnie przekształcana przez funkcję aktywacyjną \(g(z)\), która nadaje sieci nieliniowość.
 
-\paragraph{Zalety Double Q-Learning:}
+\subsubsection{Funkcja aktywacyjna}
+
+Funkcja aktywacyjna jest operacją nieliniową stosowaną do wyjść neuronów. Jest kluczowa dla modelowania złożonych zależności w danych. Poniżej przedstawiono kilka popularnych funkcji aktywacyjnych:
+
 \begin{itemize}
-    \item Redukcja przeszacowań wartości \( Q(s, a) \), co poprawia stabilność uczenia.
-    \item Lepsze działanie w środowiskach o dużej zmienności, takich jak gry wideo.
-    \item Zachowanie prostoty implementacji, ponieważ wymaga jedynie rozdzielenia tablic \( Q \).
+	\item{\textbf{ReLU (Rectified Linear Unit):}
+	      \[
+		      g(z) = \max(0, z).
+	      \]
+	      \begin{figure}[ht]
+		      \centering
+		      \begin{tikzpicture}
+			      \begin{axis}[
+					      axis lines=middle,
+					      xlabel=$z$,
+					      ylabel={$g(z)$},
+					      title={ReLU},
+					      width=0.5\textwidth,
+					      height=0.4\textwidth
+				      ]
+				      \addplot[domain=-2:2, samples=200, thick, blue] {max(0, x)};
+			      \end{axis}
+		      \end{tikzpicture}
+		      \caption{Funkcja aktywacyjna ReLU.}
+		      \label{fig:relu}
+	      \end{figure}
+	      }
+	\item{
+	      \textbf{Sigmoid:}
+	      \[
+		      g(z) = \frac{1}{1 + e^{-z}}.
+	      \]
+	      \begin{figure}[ht]
+		      \centering
+		      \begin{tikzpicture}
+			      \begin{axis}[
+					      axis lines=middle,
+					      xlabel=$z$,
+					      ylabel={$g(z)$},
+					      title={Sigmoid},
+					      width=0.5\textwidth,
+					      height=0.4\textwidth
+				      ]
+				      \addplot[domain=-6:6, samples=200, thick, red] {1/(1 + exp(-x))};
+			      \end{axis}
+		      \end{tikzpicture}
+		      \caption{Funkcja aktywacyjna Sigmoid.}
+		      \label{fig:sigmoid}
+	      \end{figure}
+	      }
+	\item {
+	      \textbf{Tanh:}
+	      \[
+		      g(z) = \tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}.
+	      \]
+
+	      \begin{figure}[ht]
+		      \centering
+		      \begin{tikzpicture}
+			      \begin{axis}[
+					      axis lines=middle,
+					      xlabel=$z$,
+					      ylabel={$g(z)$},
+					      title={Tanh},
+					      width=0.5\textwidth,
+					      height=0.4\textwidth
+				      ]
+				      \addplot[domain=-3:3, samples=200, thick, green] {tanh(x)};
+			      \end{axis}
+		      \end{tikzpicture}
+		      \caption{Funkcja aktywacyjna Tanh.}
+		      \label{fig:tanh}
+	      \end{figure}
+	      }
 \end{itemize}
 
-\paragraph{Zastosowanie w grze Super Mario Bros:}
-W projekcie Double Q-Learning jest używany do nauki optymalnej strategii dla postaci Mario, bazując na danych odczytywanych z pamięci emulatora. Tablice \( Q_1 \) i \( Q_2 \) przechowują wartości akcji takich jak ruch w lewo, w prawo, skok czy bieg, w zależności od aktualnego stanu gry, reprezentowanego m.in. przez pozycję Mario i stany przeszkód.
+\paragraph{Wykresy funkcji aktywacyjnych:}
 
-\section{Architektura gry Super Mario Bros (NES)}
+\subsubsection{Parametry modelu}
 
-Super Mario Bros to gra platformowa, w której każdy poziom można traktować jako sekwencję stanów i akcji, co czyni ją idealnym środowiskiem do zastosowania uczenia ze wzmocnieniem.
+Parametry modelu (np. wagi \(w\) i biasy \(b\)) są wartościami liczbowymi, które model dostosowuje podczas procesu uczenia. Trenowanie modelu polega na minimalizacji funkcji kosztu (ang. loss function), która mierzy różnicę między przewidywaniami modelu a rzeczywistymi wartościami.
 
-\subsection{Struktura gry}
+\[
+	L = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2,
+\]
 
-Gra składa się z następujących elementów:
+gdzie \(y_i\) to rzeczywista wartość, a \(\hat{y}_i\) to przewidywana wartość modelu.
+
+\subsection{Środowisko}
+Środowisko jest otoczeniem, w którym agent działa. Dostarcza stanów \( S \), które opisują aktualną sytuację, oraz nagród \( R \), które oceniają jakość podjętych działań.
+
+\subsection{Stan}
+Stan opisuje bieżącą sytuację w środowisku, np. pozycję Mario w grze, liczbę żyć, czy stan przeszkód.
+
+\subsection{Akcja}
+Akcja to decyzja podjęta przez agenta, np. poruszanie się w lewo, w prawo, skok, czy bieganie.
+
+\subsection{Nagroda}
+Nagroda to liczba, którą agent otrzymuje za podjęcie akcji w danym stanie. Odpowiedni dobór nagród jest kluczowy dla skuteczności algorytmu:
 \begin{itemize}
-    \item \textbf{Poziomy (ang. Levels)} – każdy poziom zawiera przeszkody, przeciwników i cele do osiągnięcia.
-    \item \textbf{Stan gry (ang. Game State)} – opisuje bieżącą pozycję Mario, czas, liczbę żyć, punkty oraz inne parametry.
-    \item \textbf{Akcje (ang. Actions)} – gracz (lub model) może sterować postacią Mario za pomocą ruchów (w lewo, w prawo, skoków) oraz akcji specjalnych (np. ataku).
+	\item \textbf{Pozytywne nagrody} motywują do osiągania celów,
+	\item \textbf{Kary} odstraszają od niepożądanych działań.
 \end{itemize}
 
-\subsection{Struktura pamięci emulatora}
-
-Dane o stanie gry są przechowywane w pamięci emulatora NES. Kluczowe informacje, które można odczytać, to:
+Przykładowo w grze Super Mario Bros nagroda może być przyznawana za:
 \begin{itemize}
-    \item Pozycja Mario (\texttt{mario\_x}, \texttt{mario\_y}),
-    \item Stan życia (\texttt{lives}),
-    \item Liczba punktów (\texttt{score}),
+	\item Zabicie przeciwnika,
+	\item Przejście na kolejny poziom,
+	\item Utratę życia (kara).
 \end{itemize}
 \begin{figure}[ht]
-\begin{center}
-\resizebox{\textwidth}{!}{
-\begin{tikzpicture}[
-    node distance=2.5cm, % Odstęp między węzłami
-    align=center, % Wyśrodkowanie tekstu w węzłach
-    >=latex, % Strzałki w stylu LaTeX
-    %every node/.style={draw, text width=3cm} % Styl węzłów
-]
+	\begin{center}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[
+					node distance=2.5cm, % Odstęp między węzłami
+					align=center, % Wyśrodkowanie tekstu w węzłach
+					>=latex, % Strzałki w stylu LaTeX
+					%every node/.style={draw, text width=3cm} % Styl węzłów
+				]
 
-\node[rectangle, minimum width=5cm, draw=black] (full_frame) {\includegraphics[width=4cm]{img/full_frame.png}\\Obraz generowany przez emulator NES};
+				\node[rectangle, minimum width=5cm, draw=black] (full_frame) {\includegraphics[width=4cm]{img/full_frame.png}\\Obraz generowany przez emulator NES};
 
-    \node[right of=full_frame, xshift=6cm, draw=black] (compressed_frame) {\includegraphics[width=2.5cm]{img/compressed_frame.png} \\Skompresowany obraz};
-    \node (model) [right of=compressed_frame, draw = black, minimum height=2cm, xshift=2cm] {Model};
-    \node (controller) [right of=model, draw=black, minimum height = 2cm, xshift=1cm, minimum width = 2cm] {Przyciski\\kontrolera\\NES};
+				\node[right of=full_frame, xshift=6cm, draw=black] (compressed_frame) {\includegraphics[width=2.5cm]{img/compressed_frame.png} \\Skompresowany obraz};
+				\node (model) [right of=compressed_frame, draw = black, minimum height=2cm, xshift=2cm] {Model};
+				\node (controller) [right of=model, draw=black, minimum height = 2cm, xshift=1cm, minimum width = 2cm] {Przyciski\\kontrolera\\NES};
 
-    \draw[<-] (compressed_frame.west) -- (full_frame.east) node[midway] {Zmniejszenie\\ rozmiaru \\ konwersja na skalę \\szarości};
-    \draw[<-] (model.west) -- (compressed_frame.east) node[midway]{Konwersja\\na tensor};
-    \draw[<-] (controller.west) -- (model.east) node[midway] {Predykcja\\wciśnięć};
+				\draw[<-] (compressed_frame.west) -- (full_frame.east) node[midway] {Zmniejszenie\\ rozmiaru \\ konwersja na skalę \\szarości};
+				\draw[<-] (model.west) -- (compressed_frame.east) node[midway]{Konwersja\\na tensor};
+				\draw[<-] (controller.west) -- (model.east) node[midway] {Predykcja\\wciśnięć};
 
-\end{tikzpicture}
-}
-\end{center}
-\caption{Ogólny schemat działania programu}
-\label{fig:sys_diagram}
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{Ogólny schemat działania programu}
+	\label{fig:sys_diagram}
 \end{figure}

@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException
 
 import wandb
 from game.runner import Runner
-from train.dqn_trainer import DQNTrainer
+from train.dqn_trainer import DQNTrainer, DQNProfiler
 from train.model import SimpleModel
 from train.helpers import ConfigFileReward
 from util.db_handler import DBHandler
@@ -271,6 +271,65 @@ def cli_main(model_id: int):
         sys.exit(1)
 
 
+def profiler(model_id: int):
+    """Terminal mode training loop"""
+    db = DBHandler()
+    logger = setup_logger(db, "cli")
+    db.logger = logger
+    episode = 0
+
+    def bind_signal(sig, frame):
+        signal_handler(logger)
+
+    signal.signal(signal.SIGINT, bind_signal)
+    config.create_default(model_id)
+    reward_handler = ConfigFileReward(logger, model_id)
+    device = torch.device(
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+    runner = Runner(device)
+
+    trainer: DQNTrainer
+    try:
+        _, model, optimizer, epsilon, episode = db.load_model(model_id, reward_handler)
+        if not model:
+            model = SimpleModel(reward_handler)
+            optimizer = None
+            epsilon = 1
+            episode = 0
+
+            # db.save_model(1, model_id, model, None, episode)
+    except Exception as e:
+        logger.error(f"Error loading model {model_id}: {str(e)}")
+        sys.exit(1)
+
+    trainer = DQNTrainer(
+        model_id,
+        runner,
+        model,
+        optimizer,
+        db,
+        reward_handler,
+        epsilon_start=epsilon,
+        episode=episode,
+    )
+    profiler = DQNProfiler(trainer)
+    logger.info(f"Starting training for model {model_id}")
+    try:
+        profiler.profile_evaluate()
+    except KeyboardInterrupt:
+        trainer.cleanup()
+        logger.info("Training stopped by user")
+    except Exception as e:
+        logger.error(f"Training error: {str(e)}")
+        trainer.cleanup()
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="DQN Mario AI Trainer")
     parser.add_argument(
@@ -280,8 +339,10 @@ def main():
         "-t", "--terminal", action="store_true", help="Run in terminal mode"
     )
 
+    parser.add_argument("-p", "--profiler", action="store_true", help="run profiler")
     args = parser.parse_args()
-
+    if args.profiler:
+        profiler(args.model)
     if args.terminal:
         # Setup signal handler for ctrl+c in terminal mode
         cli_main(args.model)
