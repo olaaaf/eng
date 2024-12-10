@@ -1,5 +1,4 @@
 \documentclass{pginz}
-
 %%%%%%%%%Miejsce na dodatkowe pakiety%%%%%%%%%%%%%
 \usepackage{subcaption}
 \PassOptionsToPackage{polish}{babel}
@@ -36,6 +35,7 @@
 
 \include{Wstep}
 \include{Rozdzial1}
+\include{Projekt}
 \include{Przeglad}
 % tu będą kolejne rozdziały
 
@@ -43,42 +43,7 @@
 %\addcontentsline{toc}{chapter}{Spis rysunków}
 %\listoftables
 %\addcontentsline{toc}{chapter}{Spis tabel}
-
-\begin{thebibliography}{99}
-
-\bibitem{DQ}
-Hasselt H., Guez A., Silver D.:
-\emph{Deep Reinforcement Learning with Double Q-learning}, 
-\url{https://doi.org/10.48550/arXiv.1509.06461},
-Google Deep Mind, 2015.
-
-\bibitem{NES}
-LeBlanc D. G., Lee G.:
-\emph{General Deep Reinforcement Learning in NES Games}, 
-\url{https://doi.org/10.21428/594757db.8472938b},
-Canadian Artificial Intelligence Association (CAIAC), 2021. 
-
-\bibitem{EV}
-Salimans T., Ho J., Chen X., Sidor S., Sutskever I.:
-\emph{Evolution Strategies as a Scalable Alternative to Reinforcement Learning}, 
-\url{https://doi.org/10.48550/arXiv.1703.03864}, OpenAI, 2017.
-
-\bibitem{RAI}
-Hessel M., Modayil J., van Hasselt H., Schaul T., Ostrovski G., Dabney W., Horgan D., Piot B., Gheshlaghi Azar M., Silver D.:
-\emph{Rainbow: Combining Improvements in Deep Reinforcement Learning}, 
-\url{https://doi.org/10.48550/arXiv.1710.02298},
-Google Deep Mind, 2017.
-
-\bibitem{HML}
-Géron A.:
-\emph{Hands-On Machine Learning with Scikit-Learn and TensorFlow: Concepts, Tools, and Techniques to Build Intelligent Systems}, 
-O'Reilly Media, 2017.
-
-\bibitem{VIME} Houthooft, R., Chen, X., Duan, Y., Schulman, J., De Turck, F., Abbeel, P.: \emph{VIME: Variational Information Maximizing Exploration},  \url{https://doi.org/10.48550/arXiv.1605.09674}, OpenAI, 2017.
-
-\bibitem{GRAD} Silver, D., Lever, G., Heess, N., Degris, T., Wierstra, D., Riedmiller, M.: \emph{Deterministic Policy Gradient Algorithms}, 31st International Conference on Machine Learning, ICML 2014.
-
-\end{thebibliography}
+\include{Bibliografia}
 
 % spis rysunków
 \include{Obrazy}
@@ -90,8 +55,8 @@ O'Reilly Media, 2017.
 % Instrukcja dla projektanta
 % Instrukcja dla użytkownika
 \begin{appendices}
-%\include{AppA}
-%\include{AppB}
+	%\include{AppA}
+	%\include{AppB}
 \end{appendices}
 %*****************
 
