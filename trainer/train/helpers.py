@@ -184,7 +184,7 @@ class ConfigFileReward(Reward):
 
         self.update_running_stats(reward)
         normalized_reward = self.normalize_reward(reward)
-        return max(min(normalized_reward, 1.0), -1.0)
+        return max(min(normalized_reward, 5.0), -5.0)
 
     def get_sum(self):
         s = self.sum
