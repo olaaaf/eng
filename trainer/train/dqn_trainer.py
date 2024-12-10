@@ -236,13 +236,11 @@ class DQNTrainer:
             "score": self.runner.step.score[-1],
             "epsilon": self.epsilon,
         } | self.reward_handler.get_sum()
-        metricss.append(metrics)
+        self.run.log(metrics)
 
         # Periodic model saving
         if self.episode_count % 30 == 0:
             self.save_model_checkpoint()
-            self.run.log(metricss)
-            metricss = []
 
     def train(self):
         """Batch training with Prioritized Experience Replay"""
@@ -294,25 +292,13 @@ class DQNTrainer:
         torch.nn.utils.clip_grad_norm_(self.online_model.parameters(), max_norm=1.0)
         self.optimizer.step()
 
-        # Store metrics
-        self.metrics_buffer["loss"].append(weighted_loss.item())
-        self.metrics_buffer["current_q_value"].append(current_q_value.mean().item())
-        self.metrics_buffer["target_q_value"].append(target_q_values.mean().item())
-
-        self.update_counter += 1
-        if self.update_counter >= self.log_frequency:
-            # Log average metrics
-            self.run.log(
-                {
-                    "loss": np.mean(self.metrics_buffer["loss"]),
-                    "current_q_value": np.mean(self.metrics_buffer["current_q_value"]),
-                    "target_q_value": np.mean(self.metrics_buffer["target_q_value"]),
-                }
-            )
-
-            # Clear buffers
-            self.metrics_buffer = {k: [] for k in self.metrics_buffer}
-            self.update_counter = 0
+        self.run.log(
+            {
+                "loss": np.mean(weighted_loss.item()),
+                "current_q_value": np.mean(current_q_value.mean().item()),
+                "target_q_value": np.mean(target_q_values.mean().item()),
+            }
+        )
 
     def update_target_network(self):
         """Soft update of target network"""
