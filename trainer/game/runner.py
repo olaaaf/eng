@@ -80,20 +80,21 @@ class Runner:
         self.nes.controller = controller
         self.buffer = self.nes.step(frames=self.frame_skip)
 
-    def __convert_input(self, controller: List[int]) -> int:
+    def __convert_input(self, controller: List[float]) -> int:
         return_controller = 0
 
-        if controller[0] > 0 and controller[0] > controller[1]:
+        # Use meaningful thresholds to determine action
+        if controller[0] > 0.5:  # Right
             return_controller |= NES_INPUT_RIGHT
-        if controller[1] > 0 and controller[1] > controller[0]:
+        if controller[1] > 0.5:  # Left
             return_controller |= NES_INPUT_LEFT
-        if controller[2] > 0 and controller[2] > controller[3]:
+        if controller[2] > 0.5:  # Down
             return_controller |= NES_INPUT_DOWN
-        if controller[3] > 0 and controller[3] > controller[2]:
+        if controller[3] > 0.5:  # Up
             return_controller |= NES_INPUT_UP
-        if controller[4] > 0:
+        if controller[4] > 0.5:  # A button
             return_controller |= NES_INPUT_A
-        if controller[5] > 0:
+        if controller[5] > 0.5:  # B button
             return_controller |= NES_INPUT_B
 
         return return_controller

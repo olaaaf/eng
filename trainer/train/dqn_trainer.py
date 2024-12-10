@@ -87,6 +87,7 @@ class DQNTrainer:
         self.epsilon_decay = reward_handler.to_dict()["epsilon_decay"]
         learning_rate = reward_handler.to_dict()["learning_rate"]
         self.runner = runner
+        weight_decay = reward_handler.to_dict()["weight_decay"]
 
         # Prioritized Replay and Target Network Parameters
         self.replay_buffer = PrioritizedReplayBuffer(capacity=10000)
@@ -110,6 +111,8 @@ class DQNTrainer:
                 "epsilon_decay": self.epsilon_decay,
                 "target_update_freq": self.target_update_frequency,
                 "learning_rate": learning_rate,
+                "weight_decay": weight_decay,
+                "tau": self.reward_handler.to_dict().get("tau", 0.01),
             },
             resume="allow",
         )
@@ -134,7 +137,11 @@ class DQNTrainer:
         self.optimizer = (
             optimizer
             if optimizer
-            else torch.optim.Adam(self.online_model.parameters(), lr=learning_rate)
+            else torch.optim.Adam(
+                self.online_model.parameters(),
+                lr=learning_rate,
+                weight_decay=weight_decay,
+            )
         )
 
         # Other configurations
@@ -148,30 +155,27 @@ class DQNTrainer:
 
     def select_action(self, state: torch.Tensor) -> List[float]:
         """Epsilon-greedy action selection"""
-        if torch.rand(1) < self.epsilon:
-            return (torch.rand(6)).float().tolist()
+        if torch.rand(1) < self.epsilon:  # Explore with random actions
+            return (torch.rand(6) * 2 - 1).float().tolist()  # Values in [-1, 1]
 
+        # Exploit: Use model predictions
         with torch.no_grad():
-            state = state.to(self.device).view(1, -1)
-            # Use get_actions to match original implementation
-            actions = self.online_model.forward(state)
-
-            return (
-                (actions).float().squeeze().cpu().tolist()
-            )  # Element-wise comparison to produce 0s and 1s
+            actions = self.online_model.forward(state.unsqueeze(0))
+            return actions.float().squeeze().cpu().tolist()
 
     def evaluate(self):
         """Advanced training episode with experience replay"""
         episode_reward = 0
         state = self.runner.reset()
         self.online_model.eval()
+        metricss = []
 
         while not self.runner.done:
             # Select and perform action
             action = self.select_action(state)
             next_state = self.runner.next(controller=action)
             reward = self.reward_handler.get_reward(self.runner.step)
-            done = not self.runner.alive
+            done = not self.runner.done
 
             # Compute TD Error for Prioritized Experience Replay
             with torch.no_grad():
@@ -216,6 +220,7 @@ class DQNTrainer:
 
         # Logging and checkpointing
         metrics = {
+            "episode_count": self.episode_count,
             "reward": episode_reward,
             "finished": (1.0 if self.runner.alive else 0.0),
             "max_x": max(self.runner.step.x_pos),
@@ -225,11 +230,13 @@ class DQNTrainer:
             "score": self.runner.step.score[-1],
             "epsilon": self.epsilon,
         } | self.reward_handler.get_sum()
-        self.run.log(metrics)
+        metricss.append(metrics)
 
         # Periodic model saving
         if self.episode_count % 30 == 0:
             self.save_model_checkpoint()
+            self.run.log(metricss)
+            metricss = []
 
     def train(self):
         """Batch training with Prioritized Experience Replay"""
@@ -292,7 +299,7 @@ class DQNTrainer:
 
     def update_target_network(self):
         """Soft update of target network"""
-        tau = 0.005  # Soft update parameter
+        tau = self.reward_handler.to_dict().get("tau", 0.005)  # Soft update parameter
         for target_param, online_param in zip(
             self.target_model.parameters(), self.online_model.parameters()
         ):

@@ -45,6 +45,12 @@ class ConfigFileReward(Reward):
         self.rewarded_for_finish = False
         self.run_max_x = 40
 
+        self.reward_mean = 0
+        self.reward_std = 1
+        self.step_count = 0
+        self.sum_rewards = 0
+        self.sum_rewards_squared = 0
+
         try:
             with open(config_path) as file:
                 settings = json.loads(file.read())
@@ -53,6 +59,20 @@ class ConfigFileReward(Reward):
             super().logger.error(f"Config file {config_path} does not exist")
         except Exception as e:
             super().logger.error(f"Analyzing rewards configuration json: {e}")
+
+    def update_running_stats(self, reward):
+        """Update running statistics for mean and std of rewards."""
+        self.step_count += 1
+        self.sum_rewards += reward
+        self.sum_rewards_squared += reward**2
+
+        self.reward_mean = self.sum_rewards / self.step_count
+        variance = self.sum_rewards_squared / self.step_count - self.reward_mean**2
+        self.reward_std = max(variance**0.5, 1e-5)  # Avoid zero division
+
+    def normalize_reward(self, reward):
+        """Normalize reward using running mean and std."""
+        return (reward - self.reward_mean) / self.reward_std
 
     def _get_cached_highscore(self):
         if self.highscore_cache is None and self.db:
@@ -162,10 +182,17 @@ class ConfigFileReward(Reward):
             else:
                 self.sum[key] = value
 
-        return reward
+        self.update_running_stats(reward)
+        normalized_reward = self.normalize_reward(reward)
+        return max(min(normalized_reward, 1.0), -1.0)
 
     def get_sum(self):
         s = self.sum
+        self.reward_mean = 0
+        self.reward_std = 1
+        self.step_count = 0
+        self.sum_rewards = 0
+        self.sum_rewards_squared = 0
         self.rewarded_for_finish = False
         self.rewarded_for_score_highscore = False
         self.rewarded_for_time_highscore = False
