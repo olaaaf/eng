@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from typing import List
-
+import cProfile
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -12,6 +12,8 @@ from game.runner import Runner
 from train.model import SimpleModel
 from train.helpers import Reward
 from util.db_handler import DBHandler
+from io import StringIO
+import pstats
 
 
 class PrioritizedReplayBuffer:
@@ -153,11 +155,7 @@ class DQNTrainer:
         self.episode_count = episode
         self.total_steps = 0
 
-        self.metrics_buffer = {
-            'loss': [],
-            'current_q_value': [],
-            'target_q_value': []
-        }
+        self.metrics_buffer = {"loss": [], "current_q_value": [], "target_q_value": []}
         self.update_counter = 0
         self.log_frequency = 100  # Log every 100 updates
 
@@ -297,19 +295,21 @@ class DQNTrainer:
         self.optimizer.step()
 
         # Store metrics
-        self.metrics_buffer['loss'].append(weighted_loss.item())
-        self.metrics_buffer['current_q_value'].append(current_q_value.mean().item())
-        self.metrics_buffer['target_q_value'].append(target_q_values.mean().item())
+        self.metrics_buffer["loss"].append(weighted_loss.item())
+        self.metrics_buffer["current_q_value"].append(current_q_value.mean().item())
+        self.metrics_buffer["target_q_value"].append(target_q_values.mean().item())
 
         self.update_counter += 1
         if self.update_counter >= self.log_frequency:
             # Log average metrics
-            self.run.log({
-                'loss': np.mean(self.metrics_buffer['loss']),
-                'current_q_value': np.mean(self.metrics_buffer['current_q_value']),
-                'target_q_value': np.mean(self.metrics_buffer['target_q_value'])
-            })
-            
+            self.run.log(
+                {
+                    "loss": np.mean(self.metrics_buffer["loss"]),
+                    "current_q_value": np.mean(self.metrics_buffer["current_q_value"]),
+                    "target_q_value": np.mean(self.metrics_buffer["target_q_value"]),
+                }
+            )
+
             # Clear buffers
             self.metrics_buffer = {k: [] for k in self.metrics_buffer}
             self.update_counter = 0
@@ -352,10 +352,12 @@ class DQNTrainer:
             self.logger.error(f"Failed to save model to wandb: {e}")
 
         try:
-            self.db_handler.save_model_archive(
+            self.db_handler.save_model(
+                self.epsilon,
                 self.model_id,
                 self.online_model,
                 self.optimizer,
+                self.episode_count,
             )
         except Exception as e:
             self.logger.error(e)
@@ -372,3 +374,26 @@ class DQNTrainer:
             self.optimizer,
             self.episode_count,
         )
+
+
+class DQNProfiler:
+    def __init__(self, trainer):
+        self.trainer = trainer
+        self.profiler = cProfile.Profile()
+
+    def profile_evaluate(self):
+        """Profile the evaluate function and save results"""
+        self.profiler.enable()
+        self.trainer.evaluate()
+        self.profiler.disable()
+
+        # Save stats to file
+        stats = pstats.Stats(self.profiler)
+        stats.sort_stats("cumulative")
+        stats.dump_stats("evaluate_profile.prof")
+
+        # Print summary to string
+        s = StringIO()
+        stats.stream = s
+        stats.print_stats()
+        print(s.getvalue())

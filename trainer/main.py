@@ -223,20 +223,29 @@ def cli_main(model_id: int):
     signal.signal(signal.SIGINT, bind_signal)
     config.create_default(model_id)
     reward_handler = ConfigFileReward(logger, model_id)
+    device = torch.device(
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+    runner = Runner(device)
 
+    trainer: DQNTrainer
     try:
         _, model, optimizer, epsilon, episode = db.load_model(model_id, reward_handler)
         if not model:
             model = SimpleModel(reward_handler)
+            optimizer = None
             epsilon = 1
             episode = 0
-            optimizer = torch.optim.Adam(model.parameters())
-            db.save_model(1, model_id, model, optimizer, episode)
+
+            # db.save_model(1, model_id, model, None, episode)
     except Exception as e:
         logger.error(f"Error loading model {model_id}: {str(e)}")
         sys.exit(1)
 
-    runner = Runner(torch.device("mps" if torch.backends.mps.is_available() else "cpu"))
     trainer = DQNTrainer(
         model_id,
         runner,
@@ -248,13 +257,11 @@ def cli_main(model_id: int):
         episode=episode,
     )
 
+    trainer.save_model_checkpoint()
     logger.info(f"Starting training for model {model_id}")
     try:
         while True:
             trainer.evaluate()
-            if episode % 100 == 0:
-                trainer.save_model_checkpoint()
-            episode += 1
     except KeyboardInterrupt:
         trainer.cleanup()
         logger.info("Training stopped by user")
