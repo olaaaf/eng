@@ -153,6 +153,14 @@ class DQNTrainer:
         self.episode_count = episode
         self.total_steps = 0
 
+        self.metrics_buffer = {
+            'loss': [],
+            'current_q_value': [],
+            'target_q_value': []
+        }
+        self.update_counter = 0
+        self.log_frequency = 100  # Log every 100 updates
+
     def select_action(self, state: torch.Tensor) -> List[float]:
         """Epsilon-greedy action selection"""
         if torch.rand(1) < self.epsilon:  # Explore with random actions
@@ -288,14 +296,23 @@ class DQNTrainer:
         torch.nn.utils.clip_grad_norm_(self.online_model.parameters(), max_norm=1.0)
         self.optimizer.step()
 
-        # Log metrics
-        self.run.log(
-            {
-                "loss": weighted_loss.item(),
-                "current_q_value": current_q_value.mean().item(),
-                "target_q_value": target_q_values.mean().item(),
-            }
-        )
+        # Store metrics
+        self.metrics_buffer['loss'].append(weighted_loss.item())
+        self.metrics_buffer['current_q_value'].append(current_q_value.mean().item())
+        self.metrics_buffer['target_q_value'].append(target_q_values.mean().item())
+
+        self.update_counter += 1
+        if self.update_counter >= self.log_frequency:
+            # Log average metrics
+            self.run.log({
+                'loss': np.mean(self.metrics_buffer['loss']),
+                'current_q_value': np.mean(self.metrics_buffer['current_q_value']),
+                'target_q_value': np.mean(self.metrics_buffer['target_q_value'])
+            })
+            
+            # Clear buffers
+            self.metrics_buffer = {k: [] for k in self.metrics_buffer}
+            self.update_counter = 0
 
     def update_target_network(self):
         """Soft update of target network"""
