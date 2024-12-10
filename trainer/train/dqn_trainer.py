@@ -112,7 +112,7 @@ class DQNTrainer:
                 "target_update_freq": self.target_update_frequency,
                 "learning_rate": learning_rate,
                 "weight_decay": weight_decay,
-                "tau": self.reward_handler.to_dict().get("tau", 0.01),
+                "tau": reward_handler.to_dict().get("tau", 0.01),
             },
             resume="allow",
         )
@@ -160,7 +160,7 @@ class DQNTrainer:
 
         # Exploit: Use model predictions
         with torch.no_grad():
-            actions = self.online_model.forward(state.unsqueeze(0))
+            actions = self.online_model.forward(state.to(self.device).unsqueeze(0))
             return actions.float().squeeze().cpu().tolist()
 
     def evaluate(self):
