@@ -11,9 +11,10 @@ from train.model import SimpleModel
 from train.helpers import ConfigFileReward
 from util.logger import setup_logger
 from util.db_handler import DBHandler
+wandb.init()
 
 def load_model_from_wandb(model_id: int, version: int) -> SimpleModel:
-    artifact = run.use_artifact(
+    artifact = wandb.use_artifact(
         f"olafercik/mario_shpeed/advanced_model_checkpoint_{model_id}:v{version}",
         type="model"
     )
@@ -53,7 +54,6 @@ if __name__ == "__main__":
     start_version = int(input("Enter starting version number: "))
     end_version = int(input("Enter ending version number: "))
     
-    run = wandb.init(project="mario_shpeed", name=f"model_{model_id}_evaluation")
     reward_handler = ConfigFileReward(logger, model_id, "rewards.json")
     runner = Runner(device, record=False)
     
@@ -96,16 +96,3 @@ if __name__ == "__main__":
     
     plt.tight_layout()
     plt.show()
-    
-    # Log to wandb
-    for result in results:
-        run.log({
-            "eval/version": result['version'],
-            "eval/max_x": result['max_x'],
-            "eval/score": result['score'],
-            "eval/time": result['time'],
-            "eval/finished": result['finished'],
-            "eval/goomba_stomps": result['goomba_stomps']
-        })
-    
-    run.finish()

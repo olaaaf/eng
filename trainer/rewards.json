@@ -62,7 +62,7 @@
             "input_size": 3840
         }
     },
-    "10": {
+    "13": {
         "position_delta": 0.5,
         "score_delta": 0.05,
         "speed": 0.00125,
