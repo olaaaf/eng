@@ -1,0 +1,59 @@
+\chapter{Implementacja}
+
+Implementacja projektu została zrealizowana przy użyciu kilku kluczowych technologii i narzędzi wspierających proces uczenia modelu oraz monitorowanie eksperymentów. Poniżej przedstawiono najważniejsze szczegóły implementacyjne oraz architekturę systemu.
+
+\section{Technologie}
+
+\begin{itemize}
+	\item \textbf{PyTorch:} Biblioteka do budowy i trenowania modelu DQN (Deep Q-Network) oraz implementacji warstw konwolucyjnych, w pełni połączonych i mechanizmów propagacji gradientów.
+	\item \textbf{Weights and Biases (WandB):} Narzędzie do monitorowania eksperymentów, umożliwiające śledzenie hiperparametrów, wyników oraz wizualizację metryk uczenia.
+	\item \textbf{Własny algorytm DQN:} Algorytm Double Q-Learning został zaimplementowany ręcznie w celu lepszego dostosowania do specyficznych wymagań projektu.
+\end{itemize}
+\section{Architektura systemu}
+
+Cały system został zaprojektowany do pracy na zdalnej maszynie wyposażonej w GPU NVIDIA, gdzie jednocześnie działa wiele procesów związanych z różnymi modelami. System korzysta z dodatkowych narzędzi, takich jak \texttt{WandB} do monitorowania i archiwizacji oraz \texttt{SQLite} do przechowywania parametrów modelu i stanu optymalizatora. Architektura systemu jest przedstawiona na rysunku~\ref{fig:systemarchitecture}.
+
+\begin{figure}[!ht]
+	\begin{center}
+		\resizebox{1\textwidth}{!}{%
+			\begin{circuitikz}
+				\tikzstyle{every node}=[font=\small]
+				\draw  (6,10.5) rectangle (4,12.5);
+				\draw [ dashed] (2.75,7.5) rectangle  (6.75,13.75);
+				\draw [ fill={rgb,255:red,255; green,255; blue,255} ] (5.75,10.75) rectangle (3.75,12.75);
+				\draw [ fill={rgb,255:red,255; green,255; blue,255} ] (5.5,11) rectangle  node {\scriptsize Procesy trenujące} (3.5,13);
+				\draw [ fill={rgb,255:red,255; green,255; blue,255} , dashed] (3.75,11.25) rectangle  node {\footnotesize Model}  (5.25,11.75);
+				\node [font=\small] at (4,13.5) {};
+				\node [font=\small] at (4.75,13.5) {Zdalna maszyna GPU};
+				\draw  (4,9.75) rectangle  node {\scriptsize Baza danych} (5.5,8.25);
+				\draw  (-2.25,12.75) rectangle  node {\small WandB} (0,8.25);
+				\draw [<->, >=Stealth] (4.75,9.75) -- (4.75,10.5)node[pos=0.5, fill=white, font=\footnotesize]{Zapisywanie modeli};
+				\draw [->, >=Stealth] (3.5,12) -- (0,12)node[pos=0.5, fill=white, font=\scriptsize]{Agregacja danych};
+			\end{circuitikz}
+		}
+	\end{center}
+	\caption{Architektura systemu}
+	\label{fig:systemarchitecture}
+\end{figure}
+
+\begin{itemize}
+	\item \textbf{Zdalna maszyna z GPU:} System działa na serwerze wyposażonym w GPU NVIDIA, umożliwiając równoczesne trenowanie kilku modeli. GPU przydzielane są do poszczególnych procesów w zależności od obciążenia.
+	\item \textbf{Weights and Biases (WandB):} WandB jest używane do monitorowania eksperymentów. Zapisuje logi, metryki (np. stratę i nagrody) oraz regularnie archiwizuje stany modelu i optymalizatora.
+	\item \textbf{SQLite:} Lekka baza danych SQLite przechowuje parametry modelu, stany optymalizatora oraz inne dane konfiguracyjne, co umożliwia łatwe wznowienie treningu lub analizę po zakończeniu procesu.
+	\item \textbf{Archiwum modeli:} Modele i stany optymalizatora są regularnie zapisywane w formacie binarnym w lokalnym archiwum, co pozwala na późniejsze wykorzystanie i ewaluację.
+	\item \textbf{Procesy równoległe:} Na maszynie uruchamiane są równocześnie różne procesy, z których każdy zajmuje się trenowaniem innego modelu. WandB synchronizuje dane z każdego procesu w czasie rzeczywistym.
+\end{itemize}
+
+\section{Monitorowanie i archiwizacja}
+
+Dzięki integracji z WandB i SQLite proces treningu jest w pełni monitorowany. WandB umożliwia wizualizację wyników w czasie rzeczywistym, a SQLite zapewnia
+\section{Uruchomienie systemu}
+
+System działa na zdalnej maszynie, co wymaga:
+\begin{itemize}
+	\item Konfiguracji środowiska wirtualnego z bibliotekami \texttt{PyTorch}, \texttt{WandB} oraz dodatkowymi zależnościami.
+	\item Połączenia z serwerem WandB w celu monitorowania eksperymentów.
+	\item Uruchomienia emulatora NES i algorytmu DQN na zdalnej maszynie wyposażonej w GPU.
+\end{itemize}
+
+Proces treningu obejmuje iteracyjne aktualizowanie modelu DQN, przesyłanie wyników do WandB oraz przechowywanie danych w Replay Buffer w celu stabilizacji procesu uczenia.

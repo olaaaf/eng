@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from typing import List
-
+import cProfile
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -12,6 +12,8 @@ from game.runner import Runner
 from train.model import SimpleModel
 from train.helpers import Reward
 from util.db_handler import DBHandler
+from io import StringIO
+import pstats
 
 
 class PrioritizedReplayBuffer:
@@ -87,6 +89,7 @@ class DQNTrainer:
         self.epsilon_decay = reward_handler.to_dict()["epsilon_decay"]
         learning_rate = reward_handler.to_dict()["learning_rate"]
         self.runner = runner
+        weight_decay = reward_handler.to_dict()["weight_decay"]
 
         # Prioritized Replay and Target Network Parameters
         self.replay_buffer = PrioritizedReplayBuffer(capacity=10000)
@@ -110,6 +113,8 @@ class DQNTrainer:
                 "epsilon_decay": self.epsilon_decay,
                 "target_update_freq": self.target_update_frequency,
                 "learning_rate": learning_rate,
+                "weight_decay": weight_decay,
+                "tau": reward_handler.to_dict().get("tau", 0.01),
             },
             resume="allow",
         )
@@ -134,7 +139,11 @@ class DQNTrainer:
         self.optimizer = (
             optimizer
             if optimizer
-            else torch.optim.Adam(self.online_model.parameters(), lr=learning_rate)
+            else torch.optim.Adam(
+                self.online_model.parameters(),
+                lr=learning_rate,
+                weight_decay=weight_decay,
+            )
         )
 
         # Other configurations
@@ -146,32 +155,33 @@ class DQNTrainer:
         self.episode_count = episode
         self.total_steps = 0
 
-    def select_action(self, state: torch.Tensor) -> List[float]:
+        self.metrics_buffer = {"loss": [], "current_q_value": [], "target_q_value": []}
+        self.update_counter = 0
+        self.log_frequency = 100  # Log every 100 updates
+
+    def select_action(self, state: torch.Tensor, runOnly=False) -> List[float]:
         """Epsilon-greedy action selection"""
-        if torch.rand(1) < self.epsilon:
-            return (torch.rand(6)).float().tolist()
+        if torch.rand(1) < self.epsilon and not runOnly:  # Explore with random actions
+            return (torch.rand(6) * 2 - 1).float().tolist()  # Values in [-1, 1]
 
+        # Exploit: Use model predictions
         with torch.no_grad():
-            state = state.to(self.device).view(1, -1)
-            # Use get_actions to match original implementation
-            actions = self.online_model.forward(state)
-
-            return (
-                (actions).float().squeeze().cpu().tolist()
-            )  # Element-wise comparison to produce 0s and 1s
+            actions = self.online_model.forward(state.to(self.device).unsqueeze(0))
+            return actions.float().squeeze().cpu().tolist()
 
     def evaluate(self):
         """Advanced training episode with experience replay"""
         episode_reward = 0
         state = self.runner.reset()
         self.online_model.eval()
+        metricss = []
 
         while not self.runner.done:
             # Select and perform action
             action = self.select_action(state)
             next_state = self.runner.next(controller=action)
             reward = self.reward_handler.get_reward(self.runner.step)
-            done = not self.runner.alive
+            done = not self.runner.done
 
             # Compute TD Error for Prioritized Experience Replay
             with torch.no_grad():
@@ -216,6 +226,7 @@ class DQNTrainer:
 
         # Logging and checkpointing
         metrics = {
+            "episode_count": self.episode_count,
             "reward": episode_reward,
             "finished": (1.0 if self.runner.alive else 0.0),
             "max_x": max(self.runner.step.x_pos),
@@ -281,18 +292,17 @@ class DQNTrainer:
         torch.nn.utils.clip_grad_norm_(self.online_model.parameters(), max_norm=1.0)
         self.optimizer.step()
 
-        # Log metrics
         self.run.log(
             {
-                "loss": weighted_loss.item(),
-                "current_q_value": current_q_value.mean().item(),
-                "target_q_value": target_q_values.mean().item(),
+                "loss": np.mean(weighted_loss.item()),
+                "current_q_value": np.mean(current_q_value.mean().item()),
+                "target_q_value": np.mean(target_q_values.mean().item()),
             }
         )
 
     def update_target_network(self):
         """Soft update of target network"""
-        tau = 0.005  # Soft update parameter
+        tau = self.reward_handler.to_dict().get("tau", 0.005)  # Soft update parameter
         for target_param, online_param in zip(
             self.target_model.parameters(), self.online_model.parameters()
         ):
@@ -328,10 +338,12 @@ class DQNTrainer:
             self.logger.error(f"Failed to save model to wandb: {e}")
 
         try:
-            self.db_handler.save_model_archive(
+            self.db_handler.save_model(
+                self.epsilon,
                 self.model_id,
                 self.online_model,
                 self.optimizer,
+                self.episode_count,
             )
         except Exception as e:
             self.logger.error(e)
@@ -348,3 +360,36 @@ class DQNTrainer:
             self.optimizer,
             self.episode_count,
         )
+
+    def run_only(self):
+        state = self.runner.reset()
+        self.online_model.eval()
+
+        while not self.runner.done:
+            # Select and perform action
+            action = self.select_action(state, True)
+            next_state = self.runner.next(controller=action)
+            state = next_state
+
+
+class DQNProfiler:
+    def __init__(self, trainer):
+        self.trainer = trainer
+        self.profiler = cProfile.Profile()
+
+    def profile_evaluate(self):
+        """Profile the evaluate function and save results"""
+        self.profiler.enable()
+        self.trainer.evaluate()
+        self.profiler.disable()
+
+        # Save stats to file
+        stats = pstats.Stats(self.profiler)
+        stats.sort_stats("cumulative")
+        stats.dump_stats("evaluate_profile.prof")
+
+        # Print summary to string
+        s = StringIO()
+        stats.stream = s
+        stats.print_stats()
+        print(s.getvalue())
