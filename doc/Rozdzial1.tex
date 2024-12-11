@@ -2,7 +2,7 @@
 
 \section{Uczenie maszynowe}
 
-Uczenie maszynowe (ang. Machine Learning) to dziedzina sztucznej inteligencji, która koncentruje się na opracowywaniu algorytmów zdolnych do automatycznego uczenia się i poprawiania wydajności na podstawie danych. W tradycyjnym programowaniu inżynierowie jawnie definiują reguły, według których system działa, podczas gdy w uczeniu maszynowym algorytm uczy się tych reguł na podstawie wzorców i statystyk w danych.
+Uczenie maszynowe (ang. Machine Learning) to dziedzina sztucznej inteligencji, która koncentruje się na opracowywaniu algorytmów zdolnych do automatycznego uczenia się i poprawiania wydajności na podstawie danych. W tradycyjnym programowaniu reguły określające działanie systemu są jawnie definiowane, podczas gdy w uczeniu maszynowym algorytm uczy się tych reguł na podstawie wzorców i statystyk w danych.
 
 Uczenie maszynowe można traktować jako proces rozwiązywania problemów, w którym algorytm musi znaleźć funkcję \( f \), która przekształca dane wejściowe \( x \) na oczekiwane wyniki \( y \):
 
@@ -367,4 +367,100 @@ Normalizacja nagrody polega na skalowaniu wartości \(r_t\) do określonego zakr
 	\item W grach komputerowych: zdobycie punktów, przejście na kolejny poziom, kara za utratę życia \cite{BELLEMARE2013}.
 	\item W robotyce: nagroda za poprawne uchwycenie przedmiotu lub utrzymanie równowagi \cite{TODOROV2012}.
 	\item W pojazdach autonomicznych: nagroda za płynne poruszanie się po drodze, kara za kolizje \cite{DOSOVITSKIY2017}.
+\end{itemize}
+
+\section{Double Q-Learning}
+
+Double Q-Learning to zaawansowany algorytm uczenia ze wzmocnieniem, będący rozszerzeniem klasycznego Q-Learningu. Jego głównym celem jest redukcja przeszacowania wartości akcji, co jest typowym problemem w tradycyjnym Q-Learningu. W tej sekcji omówione zostaną podstawy algorytmu Q-Learning, problem przeszacowania, struktura Double Q-Learning oraz jego zastosowania.
+
+\subsection{Podstawy Q-Learning}
+
+Q-Learning jest jednym z najbardziej znanych algorytmów uczenia ze wzmocnieniem, który pozwala agentowi uczyć się optymalnej strategii działania w środowisku poprzez iteracyjne aktualizowanie funkcji wartości \(Q(s, a)\). Funkcja ta ocenia korzyść z podjęcia określonej akcji \(a\) w stanie \(s\).
+
+Równanie aktualizacji w klasycznym Q-Learningu opiera się na równaniu Bellmana:
+
+\[
+	Q(s, a) \leftarrow Q(s, a) + \alpha \left( r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right),
+\]
+
+gdzie:
+\begin{itemize}
+	\item \(s\) – aktualny stan,
+	\item \(a\) – podjęta akcja,
+	\item \(r\) – nagroda za wykonanie akcji \(a\),
+	\item \(s'\) – następny stan po wykonaniu akcji \(a\),
+	\item \(\alpha\) – współczynnik uczenia, kontrolujący szybkość aktualizacji,
+	\item \(\gamma\) – współczynnik dyskontowy, określający znaczenie przyszłych nagród.
+\end{itemize}
+
+Celem algorytmu Q-Learning jest iteracyjne zbliżanie wartości funkcji \(Q(s, a)\) do jej optymalnych wartości \(Q^*(s, a)\). Wartość \(Q^*(s, a)\) reprezentuje maksymalną sumę oczekiwanych nagród, jaką agent może uzyskać, rozpoczynając w stanie \(s\), wykonując akcję \(a\), a następnie postępując zgodnie z najlepszą możliwą strategią.
+
+\subsection{Problem przeszacowania wartości}
+
+W Q-Learningu akcje są wybierane na podstawie maksymalnej wartości \(Q(s, a)\). Jednak proces aktualizacji również wykorzystuje tę maksymalną wartość, co prowadzi do przeszacowania wyników, szczególnie w środowiskach o dużej zmienności. Problem przeszacowania wynika z faktu, że maksymalizowanie wartości \(Q(s, a)\) na etapie wyboru i aktualizacji wprowadza błędy, które się kumulują.
+
+\subsection{Double Q-Learning: Struktura i działanie}
+
+Double Q-Learning rozwiązuje problem przeszacowania, wprowadzając dwie oddzielne funkcje wartości, \(Q_1\) i \(Q_2\). Te funkcje są aktualizowane naprzemiennie, co pozwala na rozdzielenie procesu wyboru akcji od procesu aktualizacji wartości.
+
+\paragraph{Równania aktualizacji:}
+W danym kroku czasowym \(t\):
+\begin{itemize}
+	\item Jeśli aktualizowana jest funkcja \(Q_1\), proces przebiega według wzoru:
+	      \[
+		      Q_1(s, a) \leftarrow Q_1(s, a) + \alpha \left( r + \gamma Q_2(s', \arg\max_{a'} Q_1(s', a')) - Q_1(s, a) \right),
+	      \]
+	\item Jeśli aktualizowana jest funkcja \(Q_2\), proces przebiega według wzoru:
+	      \[
+		      Q_2(s, a) \leftarrow Q_2(s, a) + \alpha \left( r + \gamma Q_1(s', \arg\max_{a'} Q_2(s', a')) - Q_2(s, a) \right).
+	      \]
+\end{itemize}
+
+Rozdzielenie aktualizacji między \(Q_1\) i \(Q_2\) pozwala na bardziej precyzyjne oszacowanie wartości \(Q(s, a)\), ponieważ wybór akcji opiera się na jednej funkcji, a aktualizacja na drugiej.
+
+\paragraph{Strategia \(\epsilon\)-greedy}
+
+Strategia \(\epsilon\)-greedy (ang. \(\epsilon\)-greedy policy) to jedna z najczęściej stosowanych metod równoważenia eksploracji i eksploatacji w uczeniu ze wzmocnieniem. Celem tej strategii jest umożliwienie agentowi eksploracji środowiska (odkrywanie nowych akcji) przy jednoczesnym wykorzystywaniu najlepszych dotychczasowych decyzji.
+
+W strategii \(\epsilon\)-greedy agent wybiera akcję w następujący sposób:
+\begin{itemize}
+	\item Z prawdopodobieństwem \(1 - \epsilon\) wybiera akcję o najwyższej wartości \(Q(s, a)\), czyli eksploatuje dotychczasową wiedzę.
+	\item Z prawdopodobieństwem \(\epsilon\) wybiera losową akcję, eksplorując nowe możliwości.
+\end{itemize}
+
+Parametr \(\epsilon \in [0, 1]\) kontroluje równowagę między eksploracją a eksploatacją:
+\begin{itemize}
+	\item Dla \(\epsilon = 0\) agent zawsze wybiera akcję o maksymalnej wartości \(Q(s, a)\), całkowicie eksploatując swoją wiedzę.
+	\item Dla \(\epsilon = 1\) agent zawsze wybiera losową akcję, skupiając się wyłącznie na eksploracji.
+\end{itemize}
+
+Często stosuje się harmonogram zmiany wartości \(\epsilon\) w czasie, tzw. \textit{annealing}, gdzie \(\epsilon\) początkowo jest wysokie (intensywna eksploracja), a następnie maleje w miarę zdobywania przez agenta wiedzy o środowisku. Dzięki temu na początku agent może zbierać informacje o środowisku, a później optymalizować swoje działania na podstawie dotychczasowych doświadczeń.
+
+\paragraph{Model online i model docelowy}
+
+W Double Q-Learning algorytm opiera się na rozdzieleniu funkcji wartości \(Q\) na dwie oddzielne funkcje: model online i model docelowy (ang. target model). Takie podejście pozwala na większą stabilność uczenia i bardziej precyzyjne oszacowanie wartości \(Q(s, a)\).
+
+\begin{itemize}
+	\item \textbf{Model online:} Jest to główny model używany do podejmowania decyzji przez agenta. Na podstawie modelu online agent wybiera akcje w danym stanie \(s\), kierując się strategią \( \epsilon\)-greedy lub inną strategią eksploracyjno-eksploatacyjną.
+	\item \textbf{Model docelowy (target model):} Służy do aktualizacji wartości docelowych w procesie uczenia. Model docelowy jest kopią modelu online, aktualizowaną w regularnych odstępach czasu, co zapobiega nadmiernym oscylacjom wartości \(Q\) i poprawia stabilność algorytmu.
+\end{itemize}
+
+Aktualizacja wartości \(Q\) w Double Q-Learning wykorzystuje obydwa modele:
+\begin{itemize}
+	\item Model online wybiera najlepszą akcję w stanie \(s'\), tj. \(\arg\max_{a'} Q_\text{online}(s', a')\).
+	\item Model docelowy dostarcza wartość \(Q\) dla wybranej akcji:
+	      \[
+		      Q_\text{target}(s, a) \leftarrow r + \gamma Q_\text{online}(s', \arg\max_{a'} Q_\text{target}(s', a')).
+	      \]
+\end{itemize}
+
+Rozdzielenie wyboru akcji i ich aktualizacji na dwa modele redukuje ryzyko przeszacowania, ponieważ proces wyboru akcji i oceny ich wartości odbywa się w niezależnych kopiach funkcji \(Q\).
+
+\subsection{Zalety Double Q-Learning}
+
+Double Q-Learning ma kilka istotnych zalet w porównaniu z klasycznym Q-Learningiem:
+\begin{itemize}
+	\item \textbf{Redukcja przeszacowania:} Rozdzielenie procesu wyboru i aktualizacji wartości zmniejsza ryzyko błędów wynikających z nadmiernej optymistycznej oceny.
+	\item \textbf{Lepsza stabilność:} Algorytm działa bardziej przewidywalnie w środowiskach o dużej zmienności lub hałasie.
+	\item \textbf{Elastyczność:} Double Q-Learning można łatwo rozszerzyć na bardziej złożone algorytmy, takie jak Deep Q-Learning.
 \end{itemize}
