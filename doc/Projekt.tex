@@ -3,10 +3,37 @@
 \section{Ogólna architektura systemu}
 
 System został zaprojektowany w celu nauki agenta, który skutecznie przechodzi poziomy w grze Super Mario Bros, wykorzystując algorytm Double Q-Learning. Architektura systemu składa się z czterech głównych komponentów: emulatora NES, agenta, algorytmu trenującego (DQN) oraz mechanizmu agregacji danych.
+\begin{figure}[ht]
+	\begin{center}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[
+					node distance=2.5cm,
+					align=center,
+					>=latex,
+				]
+				\node[rectangle, minimum width=5cm, draw=black] (full_frame) {\includegraphics[width=4cm]{img/full_frame.png}\\Obraz generowany przez emulator NES};
+				\node[right of=full_frame, xshift=6cm, draw=black] (compressed_frame) {\includegraphics[width=2.5cm]{img/compressed_frame.png} \\Skompresowany obraz};
+				\node (model) [right of=compressed_frame, draw = black, minimum height=2cm, xshift=2cm] {Model};
+				\node (controller) [right of=model, draw=black, minimum height = 2cm, xshift=1cm, minimum width = 2cm] {Przyciski\\kontrolera\\NES};
+				\draw[<-] (compressed_frame.west) -- (full_frame.east) node[midway] {Zmniejszenie\\ rozmiaru i \\ konwersja na skalę \\szarości};
+				\draw[<-] (model.west) -- (compressed_frame.east) node[midway]{Konwersja\\na tensor};
+				\draw[<-] (controller.west) -- (model.east) node[midway] {Predykcja\\wciśnięć};
 
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{Ogólny schemat działania programu}
+	\label{fig:sys_diagram}
+\end{figure}
 \subsection{Emulator NES}
 
-Środowisko gry zostało zaimplementowane przy użyciu emulatora NES opartego na bibliotece \texttt{cynes} \cite{CYNES}. Emulator dostarcza informacje o stanie gry poprzez odczyt pamięci RAM oraz renderowanie obrazu gry w czasie rzeczywistym.
+Środowisko gry zostało zaimplementowane przy użyciu emulatora NES opartego na bibliotece \texttt{cynes} \cite{CYNES}. Emulator ten umożliwia dokładną symulację działania konsoli Nintendo Entertainment System, oferując dostęp do pamięci RAM oraz renderowanie obrazu w czasie rzeczywistym.
+
+Emulator działa w dwóch trybach:
+\begin{itemize}
+	\item \textbf{Tryb okienkowy (windowed)} – pozwala na wizualizację gry oraz interakcję za pomocą klawiatury, co jest przydatne podczas prezentacji działania modeli.
+	\item \textbf{Tryb bez okna (headless)} – zoptymalizowany pod kątem wydajności, idealny do procesów trenowania modeli uczenia maszynowego.
+\end{itemize}
 
 \subsection{Agent}
 
@@ -21,6 +48,31 @@ Agent w systemie to model decyzyjny, który podejmuje akcje w środowisku gry na
 	      \end{itemize}
 	\item \textbf{Cel:} Nauka optymalnej strategii, która maksymalizuje sumę nagród za pomocą algorytmu Double Q-Learning.
 \end{itemize}
+
+\section{Środowisko gry}
+
+Środowisko składające się wyłącznie z jednego poziomu gry, bez włączonych efektów dźwiękowych.
+
+W danym poziomie gracz/agent ma ograniczony zestaw działań, które mogą być podejmowane w odpowiedzi na bieżący stan gry:
+\begin{itemize}
+	\item Poruszanie się w poziomie:
+	      \begin{itemize}
+		      \item Ruch w prawo – pozwala na kontynuowanie gry w kierunku celu.
+		      \item Ruch w lewo – ograniczony ze względu na jednokierunkowy projekt poziomu, ale w niektórych sytuacjach może być używany.
+	      \end{itemize}
+	\item Skakanie:
+	      \begin{itemize}
+		      \item Gracz/agent może skakać, aby unikać przeszkód, pokonywać przeciwników lub poruszać się między różnymi platformami.
+	      \end{itemize}
+	\item Stanie w miejscu – brak akcji, co jest domyślnym stanem w przypadku braku aktywności ze strony agenta.
+	\item Interakcje z otoczeniem:
+	      \begin{itemize}
+		      \item Eliminowanie przeciwników poprzez skakanie na nich.
+		      \item Zbieranie punktów poprzez interakcje z obiektami (np. monety).
+	      \end{itemize}
+\end{itemize}
+
+Nie ma możliwości wpływania na inne aspekty gry, takie jak przełączanie poziomów czy modyfikacja otoczenia. Gra kończy się w przypadku ukończenia poziomu, utraty życia lub upłynięcia limitu czasu.
 \subsection{Agregacja danych}
 
 Mechanizm agregacji danych zajmuje się odczytem istotnych informacji ze stanu pamięci emulatora, takich jak pozycja Mario, prędkość, aktualny poziom, liczba punktów, a także stan przeciwników. Dane te są później używane do trenowania agenta. Tabela~\ref{tab:nes_memory} przedstawia najważniejsze zmienne i ich adresy w pamięci RAM.
@@ -31,18 +83,95 @@ Mechanizm agregacji danych zajmuje się odczytem istotnych informacji ze stanu p
 	\label{tab:nes_memory}
 	\begin{tabular}{|c|c|p{5cm}|}
 		\hline
-		\textbf{Adres w RAM}      & \textbf{Nazwa zmiennej}          & \textbf{Opis}                                         \\ \hline
-		\texttt{0x75A}            & \texttt{lives}                   & Liczba żyć Mario.                                     \\ \hline
-		\texttt{0x006D}           & \texttt{x\_horizontal}           & Pozioma pozycja Mario (wysoki bajt).                  \\ \hline
-		\texttt{0x0086}           & \texttt{x\_on\_screen}           & Pozioma pozycja Mario na ekranie (niski bajt).        \\ \hline
-		\texttt{0x0057}           & \texttt{horizontal\_speed}       & Prędkość pozioma Mario (w postaci liczby ze znakiem). \\ \hline
-		\texttt{0x00CE}           & \texttt{y\_position\_on\_screen} & Pionowa pozycja Mario na ekranie.                     \\ \hline
-		\texttt{0x0760}           & \texttt{level}                   & Aktualny numer poziomu gry.                           \\ \hline
-		\texttt{0x07DD do 0x07E2} & \texttt{score\_bcd}              & Wynik punktowy w formacie BCD (Binary-Coded Decimal). \\ \hline
+		\textbf{Adres w RAM}               & \textbf{Nazwa zmiennej} & \textbf{Opis}                                         \\ \hline
+		\texttt{0x75A}                     & \texttt{lives}          & Liczba żyć Mario.                                     \\ \hline
+		\texttt{0x006D} i \texttt{0x0086}  & \texttt{x}              & Pozycja Mario.                                        \\ \hline
+		\texttt{0x0057}                    & \texttt{speed}          & Prędkość pozioma Mario (w postaci liczby ze znakiem). \\ \hline
+		\texttt{0x00CE}                    & \texttt{y}              & Pionowa pozycja Mario na ekranie.                     \\ \hline
+		\texttt{0x0760}                    & \texttt{level}          & Aktualny numer poziomu gry.                           \\ \hline
+		\texttt{0x07DD} do \texttt{0x07E2} & \texttt{score\_bcd}     & Wynik punktowy w formacie BCD (Binary-Coded Decimal). \\ \hline
 	\end{tabular}
 \end{table}
-\subsection{Przepływ danych w systemie}
+\section{Realizacja uczenia maszynowego}
 
+Program uczący działa w sposób iteracyjny, realizując kolejne kroki interakcji agenta ze środowiskiem, aktualizując wartości funkcji \(Q_1\) i \(Q_2\), oraz zbierając dane treningowe. Poniżej przedstawiono szczegółowy opis procesu.
+
+\subsection{Pętla gry}
+Proces działania programu można podzielić na następujące kroki:
+\begin{enumerate}
+	\item \textbf{Stan gry (\(s_t\)):} Agent odczytuje aktualny stan gry z obrazu emulatora NES.
+
+	\item \textbf{Wybór akcji (\(a_t\)):}
+	      \begin{itemize}
+		      \item Zgodnie ze strategią \(\epsilon\)-greedy agent wybiera akcję:
+		            \begin{itemize}
+			            \item Z prawdopodobieństwem \((1 - \epsilon)\): wybierana jest akcja oparta na predykcji modelu online.
+			            \item Z prawdopodobieństwem \(\epsilon\): wybierana jest losowa akcja z zakresu \( \{0, 1, 2, \dots, 6\} \), odpowiadająca kombinacjom klawiszy NES.
+		            \end{itemize}
+		      \item Akcja jest następnie przekazywana do emulatora jako wejście kontrolera gry.
+	      \end{itemize}
+
+	\item \textbf{Następny stan gry (\(s_{t+1}\)):} Emulator NES, po wykonaniu akcji \(a_t\), aktualizuje stan gry i zwraca nowy stan \(s_{t+1}\) oraz nagrodę \(r_t\). Nagroda odzwierciedla skuteczność podjętej akcji w kontekście realizacji celu (np. zwiększenie punktów, przejście poziomu, unikanie przeszkód).
+
+	\item \textbf{Replay Buffer:} Dane z bieżącego kroku (\(s_t, a_t, r_t, s_{t+1}\)) są zapisywane w buforze odtworzeń (ang. Replay Buffer). Jeśli rozmiar bufora przekracza określony próg, najstarsze dane są usuwane, aby zachować ograniczoną wielkość bufora.
+
+	\item \textbf{Trenowanie modelu:}
+	      \begin{itemize}
+		      \item Gdy bufor odtworzeń osiągnie wystarczającą liczbę próbek, uruchamiany jest proces treningowy.
+		      \item Próbki są losowo wybierane z bufora, co zmniejsza korelację między danymi i stabilizuje proces uczenia.
+		      \item Na podstawie wybranych próbek aktualizowane są wartości \(Q_1\) i \(Q_2\) zgodnie z algorytmem Double Q-Learning.
+	      \end{itemize}
+
+	\item \textbf{Agregacja danych:} Po każdym kroku dane dotyczące gry, takie jak pozycja Mario, wynik, liczba żyć, oraz nagroda, są zapisywane w celu analizy wyników i ewaluacji modelu.
+\end{enumerate}
+
+\subsection{Funkcja nagrody $r$}
+
+Funkcja nagrody w systemie została zaprojektowana tak, aby odzwierciedlać różne aspekty rozgrywki w grze \textit{Super Mario Bros}. Jej celem jest dostarczenie agentowi sygnałów wspierających naukę skutecznych strategii przechodzenia poziomów. Poniżej przedstawiono kluczowe składniki funkcji nagrody w formie tabeli~\ref{tab:reward_function}.
+
+\begin{table}[h!]
+	\centering
+	\caption{Składniki funkcji nagrody}
+	\label{tab:reward_function}
+	\begin{tabular}{|p{4.8cm}|p{7.8cm}|c|}
+		\hline
+		\textbf{Rodzaj nagrody/kary}                                                       & \textbf{Opis} & \textbf{Wartość} \\ \hline
+		Nagroda za postęp w poziomie                                                       &
+		Nagroda obliczana na podstawie pozycji poziomej
+		\(\text{r}_{pos} = \frac{1}{3220} x_{\text{pos}} - \frac{2}{161}\)                 &
+		\(0.8\)                                                                                                               \\ \hline
+		Nagroda za zdobycie punktów                                                        &
+		Nagroda oparta na zmianie liczby punktów: \newline
+		\(\text{r}_{score} = \frac{\Delta \text{score}}{100} \cdot \texttt{score\_delta}\) &
+		\(0.01\)                                                                                                              \\ \hline
+		Nagroda za ukończenie poziomu                                                      &
+		Jednorazowa nagroda przyznawana po ukończeniu poziomu.                             &
+		\(10\)                                                                                                                \\ \hline
+		Kara za śmierć                                                                     &
+		Kara przyznawana za utratę życia.                                                  &
+		\(-5\)                                                                                                                \\ \hline
+		Nagroda za eliminację przeciwników                                                 &
+		Nagroda przyznawana za skakanie na wrogów.                                         &
+		\(1\)                                                                                                                 \\ \hline
+	\end{tabular}
+\end{table}
+
+Łączna nagroda $r$ jest sumą wszystkich składników nagrody.
+\paragraph{Normalizacja funkcji nagrody:}
+
+Normalizacja funkcji nagrody jest kluczowym elementem zapewniającym stabilność procesu uczenia. W systemach takich jak Double Q-Learning, zbyt małe lub zbyt duże wartości nagród mogą prowadzić do problemów z konwergencją algorytmu. Główne cele normalizacji to:
+
+\begin{itemize}
+	\item \textbf{Utrzymanie stabilności wartości \(Q\):} Jeśli wartości nagród są zbyt małe, funkcje \(Q(s, a)\) mogą również zbliżać się do zera, co prowadzi do trudności w odróżnianiu jakości różnych akcji. Z kolei zbyt duże wartości nagród mogą powodować eksplozję wartości \(Q(s, a)\), co zakłóca proces uczenia.
+	\item \textbf{Przyspieszenie procesu uczenia:} Normalizacja redukuje różnice skali pomiędzy różnymi składnikami nagrody, dzięki czemu algorytm uczy się efektywniej.
+	\item \textbf{Zapobieganie dominacji składników nagrody:} Wartości niektórych składników nagrody mogą być znacznie większe niż innych (np. nagroda za ukończenie poziomu w porównaniu do nagrody za eliminację przeciwnika). Normalizacja pomaga wyrównać wpływ poszczególnych składników.
+\end{itemize}
+
+W tym systemie nagroda jest normalizowana w każdym kroku na podstawie średniej (\(\mu\)) i odchylenia standardowego (\(\sigma\)) bieżących nagród:
+\[
+	r_n = \frac{r - \mu}{\sigma}.
+\]
+\subsection{Model}
 \begin{figure}
 	\begin{center}
 		\begin{tikzpicture}[node distance=1.0cm]
@@ -68,38 +197,7 @@ Mechanizm agregacji danych zajmuje się odczytem istotnych informacji ze stanu p
 
 		\end{tikzpicture}
 	\end{center}
+	\label{fig:model_layers}
+	\caption{Warstwy modelu}
 \end{figure}
 
-\begin{itemize}
-	\item Agent odczytuje aktualny stan gry z pamięci emulatora, w tym pozycję Mario, liczbę żyć, prędkość i wynik.
-	\item Na podstawie obrazu gry i odczytanych danych agent wybiera akcję za pomocą strategii \(\epsilon\)-greedy.
-	\item Akcja jest przekazywana do emulatora w formie naciśniętych klawiszy.
-	\item Emulator aktualizuje stan gry i zwraca wynikowe dane, które są zapisywane przez mechanizm agregacji.
-\end{itemize}
-\begin{figure}[ht]
-	\begin{center}
-		\resizebox{\textwidth}{!}{
-			\begin{tikzpicture}[
-					node distance=2.5cm, % Odstęp między węzłami
-					align=center, % Wyśrodkowanie tekstu w węzłach
-					>=latex, % Strzałki w stylu LaTeX
-					%every node/.style={draw, text width=3cm} % Styl węzłów
-				]
-
-				\node[rectangle, minimum width=5cm, draw=black] (full_frame) {\includegraphics[width=4cm]{img/full_frame.png}\\Obraz generowany przez emulator NES};
-
-				\node[right of=full_frame, xshift=6cm, draw=black] (compressed_frame) {\includegraphics[width=2.5cm]{img/compressed_frame.png} \\Skompresowany obraz};
-				\node (model) [right of=compressed_frame, draw = black, minimum height=2cm, xshift=2cm] {Model};
-
-				\node (controller) [right of=model, draw=black, minimum height = 2cm, xshift=1cm, minimum width = 2cm] {Przyciski\\kontrolera\\NES};
-
-				\draw[<-] (compressed_frame.west) -- (full_frame.east) node[midway] {Zmniejszenie\\ rozmiaru i \\ konwersja na skalę \\szarości};
-				\draw[<-] (model.west) -- (compressed_frame.east) node[midway]{Konwersja\\na tensor};
-				\draw[<-] (controller.west) -- (model.east) node[midway] {Predykcja\\wciśnięć};
-
-			\end{tikzpicture}
-		}
-	\end{center}
-	\caption{Ogólny schemat działania programu}
-	\label{fig:sys_diagram}
-\end{figure}
