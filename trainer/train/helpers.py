@@ -88,9 +88,9 @@ class ConfigFileReward(Reward):
         score_delta = steps.score[-1] - steps.score[-2] if len(steps.score) > 1 else 0
 
         score_reward = (score_delta / 100) * self.settings.get("score_delta", 0.1)
-        speed_reward = steps.horizontal_speed[-1] * self.settings.get(
-            "speed", 1.0 / MARIO_MAX_SHPEED
-        )
+        speed_reward = 0
+        if steps.horizontal_speed[-1] <= 0:
+            speed_reward = -self.settings.get("speed", 1.0 / MARIO_MAX_SHPEED)
         position_reward = 0
         level_reward = 0
         death_reward = 0
