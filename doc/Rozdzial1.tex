@@ -98,7 +98,7 @@ Sieć neuronowa składa się z:
 \paragraph{Typy warstw:}
 Różne typy warstw stosuje się w zależności od zadania. Poniżej znajduje się tabela przedstawiająca popularne typy warstw:
 
-\begin{table}[ht]
+\begin{table}[!ht]
 	\centering
 	\caption{Rodzaje warstw w sieciach neuronowych}
 	\label{tab:layer_types}
@@ -137,7 +137,7 @@ Może być stosowana w celu wprowadzenia nieliniowych zależności w końcowej w
 	      \[
 		      g(z) = \max(0, z).
 	      \]
-	      \begin{figure}[ht]
+	      \begin{figure}[!ht]
 		      \centering
 		      \begin{tikzpicture}
 			      \begin{axis}[
@@ -160,7 +160,7 @@ Może być stosowana w celu wprowadzenia nieliniowych zależności w końcowej w
 	      \[
 		      g(z) = \frac{1}{1 + e^{-z}}.
 	      \]
-	      \begin{figure}[ht]
+	      \begin{figure}[!ht]
 		      \centering
 		      \begin{tikzpicture}
 			      \begin{axis}[
@@ -184,7 +184,7 @@ Może być stosowana w celu wprowadzenia nieliniowych zależności w końcowej w
 		      g(z) = \tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}.
 	      \]
 
-	      \begin{figure}[ht]
+	      \begin{figure}[!ht]
 		      \centering
 		      \begin{tikzpicture}
 			      \begin{axis}[
@@ -367,6 +367,17 @@ Normalizacja nagrody polega na skalowaniu wartości \(r_t\) do określonego zakr
 	\item W pojazdach autonomicznych: nagroda za płynne poruszanie się po drodze, kara za kolizje \cite{DOSOVITSKIY2017}.
 \end{itemize}
 
+\subsection{Funkcja kosztu (Loss)}
+
+Funkcja kosztu jest kluczowym elementem procesu uczenia modelu, ponieważ określa, jak bardzo bieżące predykcje modelu różnią się od wartości docelowych. W przypadku uczenia ze wzmocnieniem (ang. Reinforcement Learning), funkcja kosztu jest związana z różnicą pomiędzy bieżącymi wartościami \(Q(s, a)\) a wartościami docelowymi wyznaczonymi na podstawie nagród i przewidywań przyszłych stanów.
+
+\paragraph{Znaczenie funkcji kosztu:}
+\begin{itemize}
+	\item \textbf{Minimalizacja różnic:} Funkcja kosztu prowadzi do optymalizacji parametrów modelu \(\theta\), minimalizując różnice pomiędzy bieżącymi wartościami \(Q(s, a)\) a wartościami docelowymi.
+	\item \textbf{Stabilność procesu uczenia:} Wprowadzenie sieci docelowej \(\theta^{-}\) pozwala na bardziej stabilne obliczanie wartości docelowych \(y_t\), co zapobiega niestabilności procesu uczenia wynikającej z dynamicznie zmieniających się wartości \(Q(s, a)\).
+	\item \textbf{Wrażliwość na parametry:} Funkcja kosztu jest wrażliwa na odpowiedni dobór współczynnika dyskontowego \(\gamma\) i strategii aktualizacji sieci docelowej, co wpływa na szybkość i jakość uczenia.
+\end{itemize}
+
 \section{Double Q-Learning}
 
 Double Q-Learning to zaawansowany algorytm uczenia ze wzmocnieniem, będący rozszerzeniem klasycznego Q-Learningu. Jego głównym celem jest redukcja przeszacowania wartości akcji, co jest typowym problemem w tradycyjnym Q-Learningu. W tej sekcji omówione zostaną podstawy algorytmu Q-Learning, problem przeszacowania, struktura Double Q-Learning oraz jego zastosowania.
@@ -453,6 +464,19 @@ Aktualizacja wartości \(Q\) w Double Q-Learning wykorzystuje obydwa modele:
 \end{itemize}
 
 Rozdzielenie wyboru akcji i ich aktualizacji na dwa modele redukuje ryzyko przeszacowania, ponieważ proces wyboru akcji i oceny ich wartości odbywa się w niezależnych kopiach funkcji \(Q\).
+
+\subsection{Funkcja kosztu w Double Q-Learning:}
+
+Dla algorytmu Double Q-Learning, funkcja kosztu jest definiowana jako błąd średniokwadratowy (ang. Mean Squared Error, MSE) pomiędzy wartością docelową \(y_t\) a bieżącą wartością \(Q(s_t, a_t)\):
+\[
+	L(\theta) = \mathbb{E}_{s_t, a_t, r_t, s_{t+1}} \left[ \left( y_t - Q(s_t, a_t; \theta) \right)^2 \right],
+\]
+gdzie:
+\begin{itemize}
+	\item \(y_t = r_t + \gamma Q(s_{t+1}, \arg\max_a Q(s_{t+1}, a; \theta); \theta^{-})\) – wartość docelowa wyznaczona przy użyciu sieci docelowej \(\theta^{-}\).
+	\item \(\gamma\) – współczynnik dyskontowy, który określa wpływ przyszłych nagród.
+	\item \(r_t\) – nagroda uzyskana w bieżącym kroku.
+\end{itemize}
 
 \subsection{Zalety Double Q-Learning}
 

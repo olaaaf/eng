@@ -4,6 +4,7 @@
 \PassOptionsToPackage{polish}{babel}
 \usepackage{babel}
 \usepackage[utf8]{inputenc}  % For UTF-8 support
+\usepackage{makecell}
 \usepackage{tikz}
 \usepackage{circuitikz}
 \usepackage{algorithm}
@@ -19,6 +20,7 @@
 \usepackage{url}
 \urlstyle{same}
 
+\pdfstringdefDisableCommands{\let\HyPsd@CatcodeWarning\@gobble}
 
 \begin{document}
 
@@ -27,19 +29,20 @@
 
 \setcounter{page}{2}
 
-%\include{Abstrakt_pl}
-%\include{Abstrakt_en}
+\include{Abstrakt_pl}
+\include{Abstrakt_en}
 
 \tableofcontents
 \addcontentsline{toc}{chapter}{Spis treści}
 
-%\include{Symbole}
-%\include{Oznaczenia}
+\include{Symbole}
+\include{Oznaczenia}
 
 \include{Wstep}
 \include{Rozdzial1}
 \include{Projekt}
 \include{Architektura}
+\include{Rezultaty}
 \include{Przeglad}
 % tu będą kolejne rozdziały
 
@@ -51,6 +54,7 @@
 
 % spis rysunków
 \include{Obrazy}
+\listoftables
 
 %*****************
 %wymagane dodatki:

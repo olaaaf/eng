@@ -3,7 +3,7 @@
 \section{Ogólna architektura systemu}
 
 System został zaprojektowany w celu nauki agenta, który skutecznie przechodzi poziomy w grze Super Mario Bros, wykorzystując algorytm Double Q-Learning. Architektura systemu składa się z czterech głównych komponentów: emulatora NES, agenta, algorytmu trenującego (DQN) oraz mechanizmu agregacji danych.
-\begin{figure}[ht]
+\begin{figure}[!ht]
 	\begin{center}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[
@@ -23,7 +23,7 @@ System został zaprojektowany w celu nauki agenta, który skutecznie przechodzi 
 		}
 	\end{center}
 	\caption{Ogólny schemat działania programu}
-	\label{fig:sys_diagram}
+	\label{fig:sysdiagram}
 \end{figure}
 \subsection{Emulator NES}
 
@@ -77,7 +77,7 @@ Nie ma możliwości wpływania na inne aspekty gry, takie jak przełączanie poz
 
 Mechanizm agregacji danych zajmuje się odczytem istotnych informacji ze stanu pamięci emulatora, takich jak pozycja Mario, prędkość, aktualny poziom, liczba punktów, a także stan przeciwników. Dane te są później używane do trenowania agenta. Tabela~\ref{tab:nes_memory} przedstawia najważniejsze zmienne i ich adresy w pamięci RAM.
 
-\begin{table}[ht]
+\begin{table}[!ht]
 	\centering
 	\caption{Zmienne odczytywane z pamięci emulatora NES}
 	\label{tab:nes_memory}
@@ -125,38 +125,37 @@ Proces działania programu można podzielić na następujące kroki:
 	\item \textbf{Agregacja danych:} Po każdym kroku dane dotyczące gry, takie jak pozycja Mario, wynik, liczba żyć, oraz nagroda, są zapisywane w celu analizy wyników i ewaluacji modelu.
 \end{enumerate}
 
-\subsection{Funkcja nagrody $r$}
+\subsection{Funkcja nagrody \(r\)}
 
 Funkcja nagrody w systemie została zaprojektowana tak, aby odzwierciedlać różne aspekty rozgrywki w grze \textit{Super Mario Bros}. Jej celem jest dostarczenie agentowi sygnałów wspierających naukę skutecznych strategii przechodzenia poziomów. Poniżej przedstawiono kluczowe składniki funkcji nagrody w formie tabeli~\ref{tab:reward_function}.
-
-\begin{table}[h!]
+\begin{table}[!ht]
 	\centering
 	\caption{Składniki funkcji nagrody}
 	\label{tab:reward_function}
-	\begin{tabular}{|p{4.8cm}|p{7.8cm}|c|}
+	\begin{tabular}{|c|p{7.8cm}|c|}
 		\hline
-		\textbf{Rodzaj nagrody/kary}                                                       & \textbf{Opis} & \textbf{Wartość} \\ \hline
-		Nagroda za postęp w poziomie                                                       &
-		Nagroda obliczana na podstawie pozycji poziomej
-		\(\text{r}_{pos} = \frac{1}{3220} x_{\text{pos}} - \frac{2}{161}\)                 &
-		\(0.8\)                                                                                                               \\ \hline
-		Nagroda za zdobycie punktów                                                        &
-		Nagroda oparta na zmianie liczby punktów: \newline
-		\(\text{r}_{score} = \frac{\Delta \text{score}}{100} \cdot \texttt{score\_delta}\) &
-		\(0.01\)                                                                                                              \\ \hline
-		Nagroda za ukończenie poziomu                                                      &
-		Jednorazowa nagroda przyznawana po ukończeniu poziomu.                             &
-		\(10\)                                                                                                                \\ \hline
-		Kara za śmierć                                                                     &
-		Kara przyznawana za utratę życia.                                                  &
-		\(-5\)                                                                                                                \\ \hline
-		Nagroda za eliminację przeciwników                                                 &
-		Nagroda przyznawana za skakanie na wrogów.                                         &
-		\(1\)                                                                                                                 \\ \hline
+		\textbf{Rodzaj nagrody/kary}                                                        & \makecell{\textbf{Opis}} & \textbf{Zakres} \\ \hline
+		\makecell{Nagroda za                                                                                                             \\ postęp w poziomie} &
+		\makecell{Nagroda obliczana na                                                                                                   \\ podstawie pozycji poziomej                                                              \\
+		\(\text{r}_{pos} = \frac{1}{3220} x_{\text{pos}} - \frac{2}{161}\)}                 &
+		\([0,1]\)                                                                                                                        \\ \hline
+		\makecell{Nagroda za                                                                                                             \\  zdobycie punktów} &
+		\makecell{Nagroda oparta na                                                                                                      \\ zmianie liczby punktów                                                                    \\
+		\(\text{r}_{score} = \frac{\Delta \text{score}}{100} \cdot \texttt{score\_delta}\)} &
+		\([0, 0.02]\)                                                                                                                    \\ \hline
+		\makecell{Nagroda za                                                                                                             \\ ukończenie poziomu} &
+		\makecell{Jednorazowa nagroda przyznawana                                                                                        \\ po ukończeniu poziomu.} &
+		\([0, 10]\)                                                                                                                      \\ \hline
+		\makecell{Kara za śmierć}                                                           &
+		\makecell{Kara przyznawana za utratę życia.}                                        &
+		\([-10, 0]\)                                                                                                                     \\ \hline
+		\makecell{Nagroda za                                                                                                             \\eliminację przeciwników} &
+		\makecell{Nagroda przyznawana                                                                                                    \\ za skakanie na wrogów.} &
+		\([0,2]\)                                                                                                                        \\ \hline
 	\end{tabular}
 \end{table}
 
-Łączna nagroda $r$ jest sumą wszystkich składników nagrody.
+Łączna nagroda \(r\) jest sumą wszystkich składników nagrody.
 \paragraph{Normalizacja funkcji nagrody:}
 
 Normalizacja funkcji nagrody jest kluczowym elementem zapewniającym stabilność procesu uczenia. W systemach takich jak Double Q-Learning, zbyt małe lub zbyt duże wartości nagród mogą prowadzić do problemów z konwergencją algorytmu. Główne cele normalizacji to:
@@ -173,7 +172,7 @@ W tym systemie nagroda jest normalizowana w każdym kroku na podstawie średniej
 \]
 \subsection{Model}
 
-Model używany w systemie jest oparty na konwolucyjnej sieci neuronowej (ang. Convolutional Neural Network, CNN). Sieć składa się z warstw konwolucyjnych, normalizujących oraz w pełni połączonych. Architektura modelu jest przedstawiona na rysunku~\ref{fig:model_layers}.
+Model używany w systemie jest oparty na konwolucyjnej sieci neuronowej (ang. Convolutional Neural Network, CNN). Sieć składa się z warstw konwolucyjnych, normalizujących oraz w pełni połączonych. Architektura modelu jest przedstawiona na rysunku~\ref{fig:modellayers}.
 
 \paragraph{Parametry i wagi:}
 Model zawiera około 4 milionów parametrów, co czyni go wystarczająco złożonym, aby efektywnie reprezentować funkcję wartości \(Q(s, a)\) w złożonym środowisku gry. Parametry te obejmują wagi i biasy w warstwach konwolucyjnych oraz w pełni połączonych.
@@ -186,7 +185,7 @@ Model implementuje technikę wygaszania wag\cite{krogh1992} (ang. Weight Decay),
 	L = L_{\text{loss}} + \lambda \|W\|_2^2,
 \]
 gdzie \(L_{\text{loss}}\) to główna funkcja kosztu, \(W\) to wektor wag modelu, a \(\lambda\) to współczynnik regularyzacji.
-\begin{figure}
+\begin{figure}[!ht]
 	\begin{center}
 		\begin{tikzpicture}[node distance=1.0cm]
 			\node[draw, rectangle, minimum width=4cm, minimum height=0.7cm] (input) {Wejście: [60x64]};
@@ -211,7 +210,7 @@ gdzie \(L_{\text{loss}}\) to główna funkcja kosztu, \(W\) to wektor wag modelu
 
 		\end{tikzpicture}
 	\end{center}
-	\label{fig:model_layers}
 	\caption{Warstwy modelu}
+	\label{fig:modellayers}
 \end{figure}
 
