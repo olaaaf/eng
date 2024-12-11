@@ -12,22 +12,27 @@ class SimpleModel(nn.Module):
             conv1_channels = 16
             conv2_channels = 32
             fc1_size = 128
-            input_size = 3840  # 60 * 64
         else:
             settings = config.to_dict()
             conv1_channels = settings["conv1_channels"]
             conv2_channels = settings["conv2_channels"]
             fc1_size = settings["fc1_size"]
-            input_size = settings["input_size"]
 
         # Conv layers - input is single frame [batch, 1, 60, 64]
         self.conv1 = nn.Conv2d(1, conv1_channels, kernel_size=4, stride=2, padding=1)
         self.bn1 = nn.BatchNorm2d(conv1_channels)
-        self.conv2 = nn.Conv2d(conv1_channels, conv2_channels, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(
+            conv1_channels, conv2_channels, kernel_size=3, stride=1, padding=1
+        )
         self.bn2 = nn.BatchNorm2d(conv2_channels)
 
-        # Calculate output size after convolutions
-        self.fc1 = nn.Linear(32 * 30 * 32, fc1_size)  # Adjusted for single frame
+        # Dynamically calculate the input size for the first fully connected layer
+        with torch.no_grad():
+            dummy_input = torch.zeros(1, 1, 60, 64)  # Batch size 1, single frame
+            dummy_output = self._forward_conv_layers(dummy_input)
+            flattened_size = dummy_output.view(-1).size(0)
+
+        self.fc1 = nn.Linear(flattened_size, fc1_size)
         self.fc2 = nn.Linear(fc1_size, 6)
 
         if random_weights:
@@ -43,15 +48,28 @@ class SimpleModel(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-    def forward(self, x):
-        # x shape: [batch, 3840]
-        batch_size = x.size(0)
-        x = x.view(batch_size, 1, 60, 64)  # Reshape to [batch, channels=1, height=60, width=64]
-        
+    def _forward_conv_layers(self, x):
+        """Forward pass through convolutional layers only."""
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
-        
-        x = x.view(batch_size, -1)  # Flatten
+        return x
+
+    def forward(self, x):
+        # Validate input shape
+        if x.ndim != 3 or x.shape[1:] != (60, 64):
+            raise ValueError(f"Expected input shape [batch, 60, 64], but got {x.shape}")
+
+        # Add channel dimension: [batch, 1, 60, 64]
+        x = x.unsqueeze(1)
+
+        # Pass through convolutional layers
+        x = self._forward_conv_layers(x)
+
+        # Flatten
+        batch_size = x.size(0)
+        x = x.view(batch_size, -1)
+
+        # Pass through fully connected layers
         x = F.relu(self.fc1(x))
         return self.fc2(x)
 
