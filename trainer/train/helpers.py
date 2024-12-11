@@ -67,7 +67,11 @@ class ConfigFileReward(Reward):
         self.sum_rewards_squared += reward**2
 
         self.reward_mean = self.sum_rewards / self.step_count
-        variance = self.sum_rewards_squared / self.step_count - self.reward_mean**2
+
+        # More numerically stable variance calculation
+        variance = (self.sum_rewards_squared / self.step_count) - (self.reward_mean**2)
+        # Handle numerical instability that can cause small negative values
+        variance = max(0.0, variance)
         self.reward_std = max(variance**0.5, 1e-5)  # Avoid zero division
 
     def normalize_reward(self, reward):
