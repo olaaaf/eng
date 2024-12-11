@@ -1,4 +1,5 @@
 import argparse
+import os
 import asyncio
 import contextlib
 import logging
@@ -330,6 +331,87 @@ def profiler(model_id: int):
         sys.exit(1)
 
 
+def runner(model_id: int):
+    """Terminal mode training loop for testing model versions"""
+    db = DBHandler()
+    logger = setup_logger(db, "cli")
+    db.logger = logger
+
+    def bind_signal(sig, frame):
+        signal_handler(logger)
+
+    signal.signal(signal.SIGINT, bind_signal)
+    config.create_default(model_id)
+    reward_handler = ConfigFileReward(logger, model_id)
+    device = torch.device(
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+
+    # Get version range
+    start_version = int(input("Start version: "))
+    end_version = int(input("End version: "))
+
+    if not os.path.exists("recordings"):
+        os.mkdir("recordings")
+
+    # Test each version in range
+    for version in range(start_version, end_version + 1):
+        logger.info(f"Testing version {version}")
+        
+        runner = Runner(
+            device, 
+            record=True, 
+            video_save_path="recordings", 
+            video_prefix=f"{model_id}_v{version}"
+        )
+        
+        # Initialize wandb
+        run = wandb.init(reinit=True)  # Allow multiple runs
+        
+        # Download the artifact
+        artifact = run.use_artifact(
+            f"olafercik/mario_shpeed/advanced_model_checkpoint_{model_id}:v{version}",
+            type="model",
+        )
+        artifact_dir = artifact.download()
+        
+        # Load the model
+        filee = os.listdir(artifact_dir)[0]
+        checkpoint = torch.load(f"{artifact_dir}/{filee}", map_location=torch.device("cpu"))
+        model = SimpleModel(reward_handler)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        if model is None:
+            logger.error(f"Failed to load model version {version}")
+            continue
+        model.eval()
+
+        trainer = DQNTrainer(
+            model_id,
+            runner,
+            model,
+            None,
+            db,
+            reward_handler,
+            epsilon_start=1,
+            episode=0,
+        )
+        
+        try:
+            trainer.run_only()
+        except KeyboardInterrupt:
+            logger.info("Training stopped by user")
+            break
+        except Exception as e:
+            logger.error(f"Error testing version {version}: {str(e)}")
+            continue
+            
+        wandb.finish()  # Close current run
+
+
 def main():
     parser = argparse.ArgumentParser(description="DQN Mario AI Trainer")
     parser.add_argument(
@@ -338,12 +420,15 @@ def main():
     parser.add_argument(
         "-t", "--terminal", action="store_true", help="Run in terminal mode"
     )
+    parser.add_argument("-r", "--run", action="store_true", help="Run only")
 
     parser.add_argument("-p", "--profiler", action="store_true", help="run profiler")
     args = parser.parse_args()
-    if args.profiler:
+    if args.run:
+        runner(args.model)
+    elif args.profiler:
         profiler(args.model)
-    if args.terminal:
+    elif args.terminal:
         # Setup signal handler for ctrl+c in terminal mode
         cli_main(args.model)
     else:

@@ -110,14 +110,9 @@ def convert_output_to_controller(controller: List[int]) -> int:
 # Function to select action without randomness
 def select_action(state: torch.Tensor) -> List[float]:
     with torch.no_grad():
-        state = state.view(1, -1)
-        # Use get_actions to match original implementation
-        actions = model.forward(state)
-        print(actions)
-
-        return (
-            (actions).float().squeeze().cpu().tolist()
-        )  # Element-wise comparison to produce 0s and 1s
+        state_tensor = torch.FloatTensor(state.cpu()).unsqueeze(0).cpu()
+        actions = model.forward(state_tensor)
+        return actions.float().squeeze().cpu().tolist()
 
 
 # Function to preprocess the frame
@@ -126,7 +121,7 @@ def preprocess_frame(frame, size=(64, 60)):
     scaled_frame = cv2.cvtColor(cv2.resize(frame, size), cv2.COLOR_RGB2GRAY)
 
     # Convert to tensor and normalize
-    frame_tensor = torch.tensor(scaled_frame, dtype=torch.float32).flatten() / 255.0
+    frame_tensor = torch.tensor(scaled_frame, dtype=torch.float32) / 255.0
 
     # Display frame using OpenCV
     cv2.namedWindow("Model Input", cv2.WINDOW_NORMAL)
