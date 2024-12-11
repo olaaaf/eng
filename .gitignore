@@ -45,3 +45,4 @@ wandb
 *.db
 artifacts
 .ignore
+trainer/recordings
