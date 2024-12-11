@@ -91,6 +91,7 @@ elif source == "3":
 
 def convert_output_to_controller(controller: List[int]) -> int:
     return_controller = 0
+    #what if controller is 
     if controller[0] > 0 and controller[0] > controller[1]:
         return_controller |= NES_INPUT_RIGHT
     if controller[1] > 0 and controller[1] > controller[0]:

@@ -46,3 +46,7 @@ wandb
 artifacts
 .ignore
 trainer/recordings
+trainer/data/
+trainer/mapp.png
+trainer/nagrody_epizodow.eps
+trainer/training_metrics.eps

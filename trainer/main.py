@@ -2,6 +2,7 @@ import argparse
 import os
 import asyncio
 import contextlib
+import pandas as pd
 import logging
 import signal
 import sys
@@ -361,27 +362,29 @@ def runner(model_id: int):
     # Test each version in range
     for version in range(start_version, end_version + 1):
         logger.info(f"Testing version {version}")
-        
+
         runner = Runner(
-            device, 
-            record=True, 
-            video_save_path="recordings", 
-            video_prefix=f"{model_id}_v{version}"
+            device,
+            record=True,
+            video_save_path="recordings",
+            video_prefix=f"{model_id}_v{version}",
         )
-        
+
         # Initialize wandb
         run = wandb.init(reinit=True)  # Allow multiple runs
-        
+
         # Download the artifact
         artifact = run.use_artifact(
             f"olafercik/mario_shpeed/advanced_model_checkpoint_{model_id}:v{version}",
             type="model",
         )
         artifact_dir = artifact.download()
-        
+
         # Load the model
         filee = os.listdir(artifact_dir)[0]
-        checkpoint = torch.load(f"{artifact_dir}/{filee}", map_location=torch.device("cpu"))
+        checkpoint = torch.load(
+            f"{artifact_dir}/{filee}", map_location=torch.device("cpu")
+        )
         model = SimpleModel(reward_handler)
         model.load_state_dict(checkpoint["model_state_dict"])
         if model is None:
@@ -399,7 +402,7 @@ def runner(model_id: int):
             epsilon_start=1,
             episode=0,
         )
-        
+
         try:
             trainer.run_only()
         except KeyboardInterrupt:
@@ -408,8 +411,11 @@ def runner(model_id: int):
         except Exception as e:
             logger.error(f"Error testing version {version}: {str(e)}")
             continue
-            
-        wandb.finish()  # Close current run
+
+        df = pd.DataFrame()
+        df["x"] = runner.step.x_pos
+        df["y"] = runner.step.y_pos
+        df.to_csv(f"{model_id}_v{version}_data.csv")
 
 
 def main():

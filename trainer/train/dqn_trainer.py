@@ -162,7 +162,7 @@ class DQNTrainer:
     def select_action(self, state: torch.Tensor, runOnly=False) -> List[float]:
         """Epsilon-greedy action selection"""
         if torch.rand(1) < self.epsilon and not runOnly:  # Explore with random actions
-            return (torch.rand(3) * 2 - 1).float().tolist()  # Values in [-1, 1]
+            return (torch.rand(6) * 2 - 1).float().tolist()  # Values in [-1, 1]
 
         # Exploit: Use model predictions
         with torch.no_grad():
