@@ -172,6 +172,20 @@ W tym systemie nagroda jest normalizowana w każdym kroku na podstawie średniej
 	r_n = \frac{r - \mu}{\sigma}.
 \]
 \subsection{Model}
+
+Model używany w systemie jest oparty na konwolucyjnej sieci neuronowej (ang. Convolutional Neural Network, CNN). Sieć składa się z warstw konwolucyjnych, normalizujących oraz w pełni połączonych. Architektura modelu jest przedstawiona na rysunku~\ref{fig:model_layers}.
+
+\paragraph{Parametry i wagi:}
+Model zawiera około 4 milionów parametrów, co czyni go wystarczająco złożonym, aby efektywnie reprezentować funkcję wartości \(Q(s, a)\) w złożonym środowisku gry. Parametry te obejmują wagi i biasy w warstwach konwolucyjnych oraz w pełni połączonych.
+
+Wagi modelu są inicjalizowane metodą He\cite{he2015} (ang. Kaiming Initialization), co wspiera efektywne uczenie w głębokich sieciach neuronowych. Ta metoda losowo ustawia wartości wag w sposób, który minimalizuje ryzyko eksplozji lub zaniku gradientów w trakcie propagacji wstecznej.
+
+\paragraph{Wygaszanie wag:}
+Model implementuje technikę wygaszania wag\cite{krogh1992} (ang. Weight Decay), która jest formą regulacji. Wygaszanie wag zmniejsza wartości parametrów sieci w trakcie procesu uczenia, co zapobiega nadmiernemu dopasowaniu (ang. overfitting). Mechanizm ten działa poprzez dodanie do funkcji kosztu regularizatora w postaci normy L2 wag:
+\[
+	L = L_{\text{loss}} + \lambda \|W\|_2^2,
+\]
+gdzie \(L_{\text{loss}}\) to główna funkcja kosztu, \(W\) to wektor wag modelu, a \(\lambda\) to współczynnik regularyzacji.
 \begin{figure}
 	\begin{center}
 		\begin{tikzpicture}[node distance=1.0cm]
