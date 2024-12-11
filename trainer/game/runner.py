@@ -127,15 +127,9 @@ class Runner:
         # Use meaningful thresholds to determine action
         if controller[0] > 0.5:  # Right
             return_controller |= NES_INPUT_RIGHT
-        if controller[1] > 0.5:  # Left
-            return_controller |= NES_INPUT_LEFT
-        if controller[2] > 0.5:  # Down
-            return_controller |= NES_INPUT_DOWN
-        if controller[3] > 0.5:  # Up
-            return_controller |= NES_INPUT_UP
-        if controller[4] > 0.5:  # A button
+        if controller[1] > 0.5:  # A button
             return_controller |= NES_INPUT_A
-        if controller[5] > 0.5:  # B button
+        if controller[2] > 0.5:  # B button
             return_controller |= NES_INPUT_B
 
         return return_controller

@@ -159,10 +159,10 @@ class DQNTrainer:
         self.update_counter = 0
         self.log_frequency = 100  # Log every 100 updates
 
-    def select_action(self, state: torch.Tensor, runOnly = False) -> List[float]:
+    def select_action(self, state: torch.Tensor, runOnly=False) -> List[float]:
         """Epsilon-greedy action selection"""
         if torch.rand(1) < self.epsilon and not runOnly:  # Explore with random actions
-            return (torch.rand(6) * 2 - 1).float().tolist()  # Values in [-1, 1]
+            return (torch.rand(3) * 2 - 1).float().tolist()  # Values in [-1, 1]
 
         # Exploit: Use model predictions
         with torch.no_grad():
@@ -360,7 +360,7 @@ class DQNTrainer:
             self.optimizer,
             self.episode_count,
         )
-    
+
     def run_only(self):
         state = self.runner.reset()
         self.online_model.eval()

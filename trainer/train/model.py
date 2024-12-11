@@ -33,7 +33,7 @@ class SimpleModel(nn.Module):
             flattened_size = dummy_output.view(-1).size(0)
 
         self.fc1 = nn.Linear(flattened_size, fc1_size)
-        self.fc2 = nn.Linear(fc1_size, 6)
+        self.fc2 = nn.Linear(fc1_size, 3)
 
         if random_weights:
             self._init_weights()
