@@ -167,9 +167,7 @@ Normalizacja funkcji nagrody jest kluczowym elementem zapewniającym stabilnoś�
 \end{itemize}
 
 W tym systemie nagroda jest normalizowana w każdym kroku na podstawie średniej (\(\mu\)) i odchylenia standardowego (\(\sigma\)) bieżących nagród:
-\[
-	r_n = \frac{r - \mu}{\sigma}.
-\]
+\begin{equation}r_n = \frac{r - \mu}{\sigma}.\end{equation}
 \subsection{Model}
 
 Model używany w systemie jest oparty na konwolucyjnej sieci neuronowej (ang. Convolutional Neural Network, CNN). Sieć składa się z warstw konwolucyjnych, normalizujących oraz w pełni połączonych. Architektura modelu jest przedstawiona na rysunku~\ref{fig:modellayers}.
@@ -180,10 +178,8 @@ Model zawiera około 4 milionów parametrów, co czyni go wystarczająco złożo
 Wagi modelu są inicjalizowane metodą He\cite{he2015} (ang. Kaiming Initialization), co wspiera efektywne uczenie w głębokich sieciach neuronowych. Ta metoda losowo ustawia wartości wag w sposób, który minimalizuje ryzyko eksplozji lub zaniku gradientów w trakcie propagacji wstecznej.
 
 \paragraph{Wygaszanie wag:}
-Model implementuje technikę wygaszania wag\cite{krogh1992} (ang. Weight Decay), która jest formą regulacji. Wygaszanie wag zmniejsza wartości parametrów sieci w trakcie procesu uczenia, co zapobiega nadmiernemu dopasowaniu (ang. overfitting). Mechanizm ten działa poprzez dodanie do funkcji kosztu regularizatora w postaci normy L2 wag:
-\[
-	L = L_{\text{loss}} + \lambda \|W\|_2^2,
-\]
+Program implementuje technikę wygaszania wag\cite{krogh1992} (ang. Weight Decay), która jest formą regulacji. Wygaszanie wag zmniejsza wartości parametrów sieci w trakcie procesu uczenia, co zapobiega nadmiernemu dopasowaniu (ang. overfitting). Mechanizm ten działa poprzez dodanie do funkcji kosztu regulatora w postaci normy L2 wag:
+\begin{equation}L = L_{\text{loss}} + \lambda \|W\|_2^2,\end{equation}
 gdzie \(L_{\text{loss}}\) to główna funkcja kosztu, \(W\) to wektor wag modelu, a \(\lambda\) to współczynnik regularyzacji.
 \begin{figure}[!ht]
 	\begin{center}

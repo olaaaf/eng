@@ -250,7 +250,7 @@ gdzie \(y_i\) to rzeczywista wartość, a \(\hat{y}_i\) to przewidywana wartoś�
 
 Stan (ang. State) jest kluczowym elementem w uczeniu ze wzmocnieniem, który opisuje bieżącą sytuację w środowisku. Stan zawiera wszystkie istotne informacje potrzebne agentowi do podejmowania decyzji, takich jak pozycja w przestrzeni, otoczenie, zasoby czy inne dane kontekstowe. Formalnie, stan w danym momencie \( t \) oznaczamy jako \( s_t \).
 
-\paragraph{Definicja stanu:}
+\paragraph{Założenia stanu:}
 Stan powinien być na tyle kompletny, aby agent mógł na jego podstawie przewidzieć konsekwencje swoich działań. W praktyce oznacza to, że stan \( s_t \) powinien być wystarczający do określenia następnego stanu \( s_{t+1} \), jeśli znana jest akcja \( a_t \) podjęta przez agenta.
 
 \paragraph{Przykłady stanów w różnych środowiskach:}
@@ -388,9 +388,7 @@ Q-Learning jest jednym z najbardziej znanych algorytmów uczenia ze wzmocnieniem
 
 Równanie aktualizacji w klasycznym Q-Learningu opiera się na równaniu Bellmana:
 
-\[
-	Q(s, a) \leftarrow Q(s, a) + \alpha \left( r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right),
-\]
+\begin{equation}Q(s, a) \leftarrow Q(s, a) + \alpha \left( r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right)\end{equation}
 
 gdzie:
 \begin{itemize}
@@ -416,13 +414,9 @@ Double Q-Learning rozwiązuje problem przeszacowania, wprowadzając dwie oddziel
 W danym kroku czasowym \(t\):
 \begin{itemize}
 	\item Jeśli aktualizowana jest funkcja \(Q_1\), proces przebiega według wzoru:
-	      \[
-		      Q_1(s, a) \leftarrow Q_1(s, a) + \alpha \left( r + \gamma Q_2(s', \arg\max_{a'} Q_1(s', a')) - Q_1(s, a) \right),
-	      \]
+	      \begin{equation}Q_1(s, a) \leftarrow Q_1(s, a) + \alpha \left( r + \gamma Q_2(s', \arg\max_{a'} Q_1(s', a')) - Q_1(s, a) \right)\end{equation}
 	\item Jeśli aktualizowana jest funkcja \(Q_2\), proces przebiega według wzoru:
-	      \[
-		      Q_2(s, a) \leftarrow Q_2(s, a) + \alpha \left( r + \gamma Q_1(s', \arg\max_{a'} Q_2(s', a')) - Q_2(s, a) \right).
-	      \]
+	      \begin{equation}Q_2(s, a) \leftarrow Q_2(s, a) + \alpha \left( r + \gamma Q_1(s', \arg\max_{a'} Q_2(s', a')) - Q_2(s, a) \right)\end{equation}
 \end{itemize}
 
 Rozdzielenie aktualizacji między \(Q_1\) i \(Q_2\) pozwala na bardziej precyzyjne oszacowanie wartości \(Q(s, a)\), ponieważ wybór akcji opiera się na jednej funkcji, a aktualizacja na drugiej.
@@ -458,9 +452,7 @@ Aktualizacja wartości \(Q\) w Double Q-Learning wykorzystuje obydwa modele:
 \begin{itemize}
 	\item Model online wybiera najlepszą akcję w stanie \(s'\), tj. \(\arg\max_{a'} Q_\text{online}(s', a')\).
 	\item Model docelowy dostarcza wartość \(Q\) dla wybranej akcji:
-	      \[
-		      Q_\text{target}(s, a) \leftarrow r + \gamma Q_\text{online}(s', \arg\max_{a'} Q_\text{target}(s', a')).
-	      \]
+	      \begin{equation}Q_\text{target}(s, a) \leftarrow r + \gamma Q_\text{online}(s', \arg\max_{a'} Q_\text{target}(s', a')).\end{equation}
 \end{itemize}
 
 Rozdzielenie wyboru akcji i ich aktualizacji na dwa modele redukuje ryzyko przeszacowania, ponieważ proces wyboru akcji i oceny ich wartości odbywa się w niezależnych kopiach funkcji \(Q\).
@@ -468,9 +460,8 @@ Rozdzielenie wyboru akcji i ich aktualizacji na dwa modele redukuje ryzyko przes
 \subsection{Funkcja kosztu w Double Q-Learning:}
 
 Dla algorytmu Double Q-Learning, funkcja kosztu jest definiowana jako błąd średniokwadratowy (ang. Mean Squared Error, MSE) pomiędzy wartością docelową \(y_t\) a bieżącą wartością \(Q(s_t, a_t)\):
-\[
-	L(\theta) = \mathbb{E}_{s_t, a_t, r_t, s_{t+1}} \left[ \left( y_t - Q(s_t, a_t; \theta) \right)^2 \right],
-\]
+
+\begin{equation}L(\theta) = \mathbb{E}_{s_t, a_t, r_t, s_{t+1}} \left[ \left( y_t - Q(s_t, a_t; \theta) \right)^2 \right],\end{equation}
 gdzie:
 \begin{itemize}
 	\item \(y_t = r_t + \gamma Q(s_{t+1}, \arg\max_a Q(s_{t+1}, a; \theta); \theta^{-})\) – wartość docelowa wyznaczona przy użyciu sieci docelowej \(\theta^{-}\).
