@@ -80,62 +80,71 @@ class EvolutionaryStrategyTrainer:
             / len(self.runner.step.horizontal_speed),
             "time": self.runner.step.time,
             "score": self.runner.step.score[-1],
-            "epsilon": self.epsilon,
         } | self.reward_handler.get_sum()
         self.run.log(m)
         return episode_reward
 
     def evaluate(self):
         """Train the model using Evolutionary Strategy"""
-        for _ in range(self.population_size):
-            # Generate noise
-            noise = [torch.randn_like(param) for param in self.model.parameters()]
+        base_model_state = self.model.state_dict()
 
-            # Create perturbed models
-            perturbed_models = []
-            for i in range(self.population_size):
-                perturbed_model = SimpleModel(random_weights=False).to(self.device)
-                perturbed_model.load_state_dict(self.model.state_dict())
-                for param, n in zip(perturbed_model.parameters(), noise):
-                    param.data += self.sigma * n
-                perturbed_models.append(perturbed_model)
+        try:
+            for _ in range(self.population_size):
+                # Generate noise once for all parameters
+                noise = [torch.randn_like(param) for param in self.model.parameters()]
 
-            # Evaluate perturbed models
-            rewards = []
-            for perturbed_model in perturbed_models:
-                self.model = perturbed_model
-                reward = self.play()
-                rewards.append(reward)
+                # Evaluate perturbed models
+                rewards = []
+                for i in range(self.population_size):
+                    # Create perturbation
+                    perturbed_model = SimpleModel(random_weights=False).to(self.device)
+                    perturbed_model.load_state_dict(base_model_state)
 
-            # Compute weighted sum of noise
-            rewards = np.array(rewards)
-            normalized_rewards = (rewards - rewards.mean()) / rewards.std()
-            weighted_sum = [
-                torch.zeros_like(param) for param in self.model.parameters()
-            ]
-            for i, perturbed_model in enumerate(perturbed_models):
-                for j, param in enumerate(perturbed_model.parameters()):
-                    weighted_sum[j] += normalized_rewards[i] * noise[j]
+                    for param, n in zip(perturbed_model.parameters(), noise):
+                        param.data += self.sigma * n
 
-            # Update model parameters
-            for param, w in zip(self.model.parameters(), weighted_sum):
-                param.data += (
-                    self.learning_rate / (self.population_size * self.sigma) * w
-                )
+                    # Evaluate
+                    self.model = perturbed_model
+                    reward = self.play()
+                    rewards.append(reward)
 
-            # Logging
-            self.episode_count += 1
-            metrics = {
-                "episode_count": self.episode_count,
-                "reward": rewards.mean(),
-                "max_reward": rewards.max(),
-                "min_reward": rewards.min(),
-            } | self.reward_handler.get_sum()
-            self.run.log(metrics)
+                # Normalize rewards
+                rewards = np.array(rewards)
+                if rewards.std() != 0:
+                    normalized_rewards = (rewards - rewards.mean()) / (
+                        rewards.std() + 1e-8
+                    )
+                else:
+                    normalized_rewards = rewards - rewards.mean()
 
-            # Periodic model saving
-            if self.episode_count % 30 == 0:
-                self.save_model_checkpoint()
+                # Update base model parameters
+                self.model.load_state_dict(base_model_state)
+                for param, n in zip(self.model.parameters(), noise):
+                    update = (
+                        self.learning_rate
+                        / (self.population_size * self.sigma)
+                        * (normalized_rewards.reshape(-1, 1) * n).mean(dim=0)
+                    )
+                    param.data += update
+
+                # Logging and checkpointing
+                self.episode_count += 1
+                metrics = {
+                    "episode_count": self.episode_count,
+                    "reward_mean": rewards.mean(),
+                    "reward_max": rewards.max(),
+                    "reward_min": rewards.min(),
+                    "reward_std": rewards.std(),
+                } | self.reward_handler.get_sum()
+                self.run.log(metrics)
+
+                if self.episode_count % 30 == 0:
+                    self.save_model_checkpoint()
+
+        except Exception as e:
+            self.logger.error(f"Error in evaluate: {e}")
+            self.model.load_state_dict(base_model_state)  # Restore original model state
+            raise
 
     def save_model_checkpoint(self):
         """Save model checkpoint to wandb and local database"""
