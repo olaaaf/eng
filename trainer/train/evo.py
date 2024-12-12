@@ -87,33 +87,30 @@ class EvolutionaryStrategyTrainer:
     def evaluate(self):
         """Train the model using Evolutionary Strategy"""
         base_model_state = self.model.state_dict()
-
+        
         try:
             for _ in range(self.population_size):
                 # Generate noise once for all parameters
                 noise = [torch.randn_like(param) for param in self.model.parameters()]
-
+                
                 # Evaluate perturbed models
-                rewards = []
+                rewards = torch.zeros(self.population_size, device=self.device)
                 for i in range(self.population_size):
                     # Create perturbation
                     perturbed_model = SimpleModel(random_weights=False).to(self.device)
                     perturbed_model.load_state_dict(base_model_state)
-
+                    
+                    # Apply noise
                     for param, n in zip(perturbed_model.parameters(), noise):
                         param.data += self.sigma * n
-
+                    
                     # Evaluate
                     self.model = perturbed_model
-                    reward = self.play()
-                    rewards.append(reward)
+                    rewards[i] = self.play()
 
                 # Normalize rewards
-                rewards = np.array(rewards)
                 if rewards.std() != 0:
-                    normalized_rewards = (rewards - rewards.mean()) / (
-                        rewards.std() + 1e-8
-                    )
+                    normalized_rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-8)
                 else:
                     normalized_rewards = rewards - rewards.mean()
 
@@ -123,24 +120,24 @@ class EvolutionaryStrategyTrainer:
                     update = (
                         self.learning_rate
                         / (self.population_size * self.sigma)
-                        * (normalized_rewards.reshape(-1, 1) * n).mean(dim=0)
+                        * torch.sum(normalized_rewards.view(-1, 1) * n)
                     )
                     param.data += update
 
-                # Logging and checkpointing
+                # Logging and checkpointing 
                 self.episode_count += 1
                 metrics = {
                     "episode_count": self.episode_count,
-                    "reward_mean": rewards.mean(),
-                    "reward_max": rewards.max(),
-                    "reward_min": rewards.min(),
-                    "reward_std": rewards.std(),
+                    "reward_mean": rewards.mean().item(),
+                    "reward_max": rewards.max().item(),
+                    "reward_min": rewards.min().item(),
+                    "reward_std": rewards.std().item(),
                 } | self.reward_handler.get_sum()
                 self.run.log(metrics)
 
                 if self.episode_count % 30 == 0:
                     self.save_model_checkpoint()
-
+                    
         except Exception as e:
             self.logger.error(f"Error in evaluate: {e}")
             self.model.load_state_dict(base_model_state)  # Restore original model state
