@@ -94,11 +94,10 @@ class ConfigFileReward(Reward):
         score_reward = (score_delta / 100) * self.settings.get("score_delta", 0.1)
         speed_reward = 0
         if steps.horizontal_speed[-1] <= 0:
-            speed_reward = -self.settings.get("speed", 1.0 / MARIO_MAX_SHPEED)
+            speed_reward = -self.settings.get("speed", 1.0 / MARIO_MAX_SHPEED) * 0.2
         position_reward = 0
         level_reward = 0
         death_reward = 0
-        time_over_reward = 0
         stomp_reward = 0
 
         if steps.level == 1 and not self.rewarded_for_finish:
@@ -110,17 +109,6 @@ class ConfigFileReward(Reward):
             death_reward = self.settings.get("death", -10)
             self.punished_for_death = True
 
-        max_time = 9832
-        time_penalty_scale = self.settings["time_penalty"]
-        if steps.time > self.settings["time_penalty_start"]:
-            # Compute penalty as a function of time
-            time_over = steps.time - self.settings["time_penalty_start"]
-            penalty = (
-                time_penalty_scale
-                * (time_over / (max_time - self.settings["time_penalty_start"])) ** 2
-            )
-            time_over_reward = -penalty
-
         if steps.just_stomped:
             stomp_reward = self.settings.get("stomp", 1)
 
@@ -131,51 +119,12 @@ class ConfigFileReward(Reward):
                 self.settings.get("position_reward", 1) * position_reward_function
             )
 
-        # Highscore rewards
-        if False:
-            highscore = self._get_cached_highscore()
-            if highscore:
-                _, high_x, high_score, high_time = highscore
-
-                # X position highscore
-                if not self.rewarded_for_x_highscore and steps.x_pos[-1] > high_x:
-                    reward += self.settings.get("beat_x_highscore", 50)
-                    rewards["rewards_for_x_highscore"] = self.settings.get(
-                        "beat_x_highscore", 50
-                    )
-                    self.rewarded_for_x_highscore = True
-
-                # Score highscore
-                if (
-                    not self.rewarded_for_score_highscore
-                    and steps.score[-1] > high_score
-                ):
-                    reward += self.settings.get("beat_score_highscore", 10)
-                    rewards["rewards_for_score_highscore"] = self.settings.get(
-                        "beat_score_highscore", 100
-                    )
-                    self.rewarded_for_score_highscore = True
-
-                # Time highscore (only when completing level)
-                if (
-                    steps.level == 1
-                    and not self.rewarded_for_time_highscore
-                    and steps.time[-1] < high_time
-                    and steps.time[-1] > 0
-                ):
-                    reward += self.settings.get("beat_time_highscore", 150)
-                    rewards["rewards_for_time_highscore"] = self.settings.get(
-                        "beat_time_highscore", 150
-                    )
-                    self.rewarded_for_time_highscore = True
-
         rewards = {
             "position_reward": position_reward,
             "score_reward": score_reward,
             "speed_reward": speed_reward,
             "level_reward": level_reward,
             "death_reward": death_reward,
-            "time_over_reward": time_over_reward,
             "stomp_reward": stomp_reward,
         }
 
@@ -186,9 +135,7 @@ class ConfigFileReward(Reward):
             else:
                 self.sum[key] = value
 
-        self.update_running_stats(reward)
-        normalized_reward = self.normalize_reward(reward)
-        return max(min(normalized_reward, 5.0), -5.0)
+        return reward
 
     def get_sum(self):
         s = self.sum
