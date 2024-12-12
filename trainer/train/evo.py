@@ -70,8 +70,7 @@ class EvolutionaryStrategyTrainer:
             reward = self.reward_handler.get_reward(self.runner.step)
             episode_reward += reward
             state = next_state
-
-        self.reward_handler.get_sum()
+        self.run.log(self.reward_handler.get_sum())
         return episode_reward
 
     def evaluate(self):
