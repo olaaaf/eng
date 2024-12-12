@@ -106,9 +106,11 @@ class DBHandler:
 
     def save_model(self, epsilon, model_id, model, optimizer, episode):
         model_buffer = io.BytesIO()
-        torch.save(model.state_dict(), model_buffer)
+        if model:
+            torch.save(model.state_dict(), model_buffer)
         optimizer_buffer = io.BytesIO()
-        torch.save(optimizer.state_dict(), optimizer_buffer)
+        if optimizer:
+            torch.save(optimizer.state_dict(), optimizer_buffer)
 
         with self.conn:
             self.conn.execute(
@@ -127,9 +129,11 @@ class DBHandler:
 
     def save_model_archive(self, model_id, model, optimizer):
         model_buffer = io.BytesIO()
-        torch.save(model.state_dict(), model_buffer)
+        if model:
+            torch.save(model.state_dict(), model_buffer)
         optimizer_buffer = io.BytesIO()
-        torch.save(optimizer.state_dict(), optimizer_buffer)
+        if optimizer:
+            torch.save(optimizer.state_dict(), optimizer_buffer)
 
         with self.conn:
             self.conn.execute(
@@ -184,18 +188,12 @@ class DBHandler:
             )
             row = cursor.fetchone()
             if row:
-                model_data, optimizer_data = row
+                model_data, _ = row
                 model = SimpleModel()
                 model.load_state_dict(
                     torch.load(io.BytesIO(model_data), weights_only=True)
                 )
-                for param in model.parameters():
-                    param.requires_grad = False
-                optimizer = torch.optim.Adam(model.parameters())
-                optimizer.load_state_dict(
-                    torch.load(io.BytesIO(optimizer_data), weights_only=True)
-                )
-                return model, optimizer
+                return model, None
             return None, None
 
     def get_train_count(self, model_id):

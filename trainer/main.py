@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException
 
 import wandb
 from game.runner import Runner
-from train.dqn_trainer import DQNTrainer, DQNProfiler
+from train.evo import EvolutionaryStrategyTrainer
 from train.model import SimpleModel
 from train.helpers import ConfigFileReward
 from util.db_handler import DBHandler
@@ -28,7 +28,7 @@ import config
 @dataclass
 class TrainingSession:
     thread: threading.Thread
-    trainer: DQNTrainer
+    trainer: EvolutionaryStrategyTrainer
     stop_flag: threading.Event
 
 
@@ -75,7 +75,9 @@ async def startup_event():
     # wandb.config
 
 
-async def training_loop(trainer: DQNTrainer, stop_flag: threading.Event):
+async def training_loop(
+    trainer: EvolutionaryStrategyTrainer, stop_flag: threading.Event
+):
     """Training loop that checks for stop signal."""
     trainer.logger.info(f"Started training thread for model {trainer.model_id}")
     while not stop_flag.is_set():
@@ -98,17 +100,15 @@ async def train_start(model_id: int):
     # Initialize training components
     db = DBHandler()
     logger = setup_logger(db, "trainer_sever")
-    epsilon = 1
     episode = 0
 
     config.create_default(model_id)
     reward_handler = ConfigFileReward(logger, model_id)
     # Load or create model
     try:
-        _, model, optimizer, epsilon, episode = db.load_model(model_id, reward_handler)
+        _, model, _, _, episode = db.load_model(model_id, reward_handler)
         if not model:
             model = SimpleModel(reward_handler)
-            epsilon = 1
             episode = 0
             optimizer = torch.optim.Adam(model.parameters())
             db.save_model(1, model_id, model, optimizer, episode)
@@ -122,16 +122,13 @@ async def train_start(model_id: int):
     runner = Runner(torch.device("mps" if torch.backends.mps.is_available() else "cpu"))
     # Create a config or load one for the reward system
 
-    trainer = DQNTrainer(
+    trainer = EvolutionaryStrategyTrainer(
         model_id,
         runner,
         model,
-        None,
-        # optimizer,
         db,
-        epsilon_start=epsilon,
-        episode=episode,
         reward_handler=reward_handler,
+        episode=episode,
     )
     stop_flag = threading.Event()
 
@@ -234,7 +231,7 @@ def cli_main(model_id: int):
     )
     runner = Runner(device)
 
-    trainer: DQNTrainer
+    trainer: EvolutionaryStrategyTrainer
     try:
         _, model, optimizer, epsilon, episode = db.load_model(model_id, reward_handler)
         if not model:
@@ -248,7 +245,7 @@ def cli_main(model_id: int):
         logger.error(f"Error loading model {model_id}: {str(e)}")
         sys.exit(1)
 
-    trainer = DQNTrainer(
+    trainer = EvolutionaryStrategyTrainer(
         model_id,
         runner,
         model,
@@ -295,7 +292,7 @@ def profiler(model_id: int):
     )
     runner = Runner(device)
 
-    trainer: DQNTrainer
+    trainer: EvolutionaryStrategyTrainer
     try:
         _, model, optimizer, epsilon, episode = db.load_model(model_id, reward_handler)
         if not model:
@@ -309,7 +306,7 @@ def profiler(model_id: int):
         logger.error(f"Error loading model {model_id}: {str(e)}")
         sys.exit(1)
 
-    trainer = DQNTrainer(
+    trainer = EvolutionaryStrategyTrainer(
         model_id,
         runner,
         model,
@@ -392,7 +389,7 @@ def runner(model_id: int):
             continue
         model.eval()
 
-        trainer = DQNTrainer(
+        trainer = EvolutionaryStrategyTrainer(
             model_id,
             runner,
             model,

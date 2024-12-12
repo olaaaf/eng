@@ -20,31 +20,19 @@ def create_default(model_id):
         return
 
     default_config = {
-        "position_delta": 0.5,
+        "position_delta": 0,
         "score_delta": 0.05,
         "speed": 0.00125,
         "finish": 10,
         "death": -5,
-        "position_reward": 1,
+        "position_reward": 0.5,
         "time_penalty": 0.00,
         "time_penalty_start": 9000,
         "stomp": 1,
         "beat_x_highscore": 50,
         "beat_score_highscore": 20,
         "beat_time_highscore": 150,
-        "config": {
-            "gamma": 0.97,
-            "batch_size": 64,
-            "epsilon_end": 0.01,
-            "weight_decay": 1e-5,
-            "epsilon_decay": 0.999,
-            "tau": 0.01,
-            "learning_rate": 1e-4,
-            "fc1_size": 128,
-            "conv1_channels": 16,
-            "conv2_channels": 32,
-            "input_size": 3840,
-        },
+        "config": {"learning_rate": 1e-4, "population_size": 50, "sigma": 0.1},
     }
     logger.info(f"Adding new configuration for model_id: {model_id}")
     config_data[model_id] = default_config
