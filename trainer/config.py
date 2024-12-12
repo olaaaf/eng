@@ -32,7 +32,15 @@ def create_default(model_id):
         "beat_x_highscore": 50,
         "beat_score_highscore": 20,
         "beat_time_highscore": 150,
-        "config": {"learning_rate": 1e-4, "population_size": 50, "sigma": 0.1},
+        "config": {
+            "learning_rate": 1e-4,
+            "population_size": 50,
+            "sigma": 0.1,
+            "fc1_size": 128,
+            "conv1_channels": 16,
+            "conv2_channels": 32,
+            "input_size": 3840,
+        },
     }
     logger.info(f"Adding new configuration for model_id: {model_id}")
     config_data[model_id] = default_config
