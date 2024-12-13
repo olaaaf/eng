@@ -32,6 +32,7 @@ def create_default(model_id):
         "beat_x_highscore": 50,
         "beat_score_highscore": 20,
         "beat_time_highscore": 150,
+        "jump_reward": 0.1,
         "config": {
             "gamma": 0.97,
             "batch_size": 64,

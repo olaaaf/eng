@@ -100,10 +100,15 @@ class ConfigFileReward(Reward):
         death_reward = 0
         time_over_reward = 0
         stomp_reward = 0
+        jump_reward = 0
 
         if steps.level == 1 and not self.rewarded_for_finish:
             level_reward = self.settings.get("finish", 10)
             self.rewarded_for_finish = True
+
+        y_delta = steps.y_pos[-1] - steps.y_pos[-2] if len(steps.y_pos) > 2 else 0
+        if y_delta < 0:
+            jump_reward += self.settings.get("jump_reward", 0.1)
 
         # Large penalty for death
         if steps.died and not self.punished_for_death:
