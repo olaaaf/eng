@@ -130,6 +130,7 @@ class ConfigFileReward(Reward):
             position_reward = (
                 self.settings.get("position_reward", 1) * position_reward_function
             )
+            reward += position_reward * 10
 
         # Highscore rewards
         if False:
@@ -187,8 +188,7 @@ class ConfigFileReward(Reward):
                 self.sum[key] = value
 
         self.update_running_stats(reward)
-        normalized_reward = self.normalize_reward(reward)
-        return max(min(normalized_reward, 5.0), -5.0)
+        return reward
 
     def get_sum(self):
         s = self.sum
