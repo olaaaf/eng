@@ -182,6 +182,7 @@ class ConfigFileReward(Reward):
             "death_reward": death_reward,
             "time_over_reward": time_over_reward,
             "stomp_reward": stomp_reward,
+            "jump_reward": jump_reward
         }
 
         for key, value in rewards.items():
