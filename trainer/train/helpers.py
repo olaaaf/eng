@@ -182,7 +182,7 @@ class ConfigFileReward(Reward):
             "death_reward": death_reward,
             "time_over_reward": time_over_reward,
             "stomp_reward": stomp_reward,
-            "jump_reward": jump_reward
+            "jump_reward": jump_reward,
         }
 
         for key, value in rewards.items():
@@ -194,7 +194,7 @@ class ConfigFileReward(Reward):
 
         self.update_running_stats(reward)
         normalized_reward = self.normalize_reward(reward)
-        return max(min(normalized_reward, 5.0), -5.0)
+        return normalized_reward
 
     def get_sum(self):
         s = self.sum
